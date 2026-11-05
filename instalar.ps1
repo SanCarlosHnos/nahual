@@ -22,11 +22,12 @@ if (Test-Path (Join-Path $destino '.git')) {
   Write-Host "Instalando Nahual en $destino..." -ForegroundColor Cyan
   git clone --quiet "$origen" "$destino"
   if ($LASTEXITCODE -ne 0) { throw 'No pude copiar Nahual.' }
-  git -C "$destino" remote remove origin 2>$null
-  git -C "$destino" config user.email 'nahual@local'
-  git -C "$destino" config user.name 'Nahual'
-  git -C "$destino" tag fabrica 2>$null
-  git -C "$destino" tag ultima-buena 2>$null
+  cmd /c "git -C ""$destino"" remote remove origin" 2>$null | Out-Null
+  cmd /c "git -C ""$destino"" config user.email nahual@local" | Out-Null
+  cmd /c "git -C ""$destino"" config user.name Nahual" | Out-Null
+  # La versión instalada en este momento es la "fábrica" y la "última buena".
+  cmd /c "git -C ""$destino"" tag -f fabrica" 2>$null | Out-Null
+  cmd /c "git -C ""$destino"" tag -f ultima-buena" 2>$null | Out-Null
 }
 
 Push-Location $destino
