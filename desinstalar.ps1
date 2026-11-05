@@ -1,4 +1,4 @@
-# Desinstalador de Forja. Quita el programa, el comando "forja" y los accesos directos.
+﻿# Desinstalador de Forja. Quita el programa, el comando "forja" y los accesos directos.
 # NO borra tus proyectos (Documentos\Forja) ni tus ajustes (%APPDATA%\Forja).
 $destino = Join-Path $env:LOCALAPPDATA 'Programs\Forja'
 

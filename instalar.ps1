@@ -1,4 +1,4 @@
-# Instalador de Forja para Windows.
+﻿# Instalador de Forja para Windows.
 # Copia Forja a %LOCALAPPDATA%\Programs\Forja, instala dependencias, registra el comando "forja"
 # y crea accesos directos en el menú Inicio y el escritorio.
 # Si ya está instalada, NO la sobrescribe (conserva sus mejoras); solo repara dependencias y accesos.
