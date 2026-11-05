@@ -4,7 +4,7 @@ import { readdirSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { commands } from './commands';
 import { DEFAULTS } from './config';
-import { ROOT } from './paths';
+import { PROTECTED_SELF, ROOT } from './paths';
 import { evolveSystemPrompt, taskSystemPrompt } from './prompts';
 import { parseActions, stripThinking, unfence } from './protocol';
 import { applyEdit, resolveSafe } from './tools';
@@ -75,6 +75,7 @@ check('prompt de mejora se genera', evolveSystemPrompt().includes('ADN'));
 const names = commands.map((x) => x.name);
 check('comandos únicos', new Set(names).size === names.length);
 check('existen /mejorar y /ayuda', names.includes('mejorar') && names.includes('ayuda'));
+check('núcleo y supervisor protegidos', PROTECTED_SELF.includes('nucleo') && PROTECTED_SELF.includes('supervisor.mjs'));
 
 // Regla crítica: ningún archivo de src contiene etiquetas de cierre literales
 const forbidden = ['write', 'edit', 'run', 'done'].map(c);

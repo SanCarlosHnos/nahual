@@ -1,31 +1,31 @@
 import { mkdirSync } from 'node:fs';
-import * as readline from 'node:readline/promises';
 import { Agent } from './agent';
 import { findCommand, type AppState } from './commands';
 import { loadConfig } from './config';
+import { LineInput } from './input';
 import { listModels } from './ollama';
 import { defaultWorkdir } from './paths';
 import { taskSystemPrompt } from './prompts';
 import { ui } from './ui';
 
 const RESTART_CODE = 42;
+const EVOLVE_CODE = 43;
 
 async function main(): Promise<void> {
   const cfg = loadConfig();
 
   // Modo de comprobación usado por la verificación de mejoras: carga todo y sale.
   if (process.argv.includes('--check')) {
-    taskSystemPrompt(defaultWorkdir());
+    taskSystemPrompt(defaultWorkdir(cfg.carpetaProyectos));
     console.log('check ok');
     return;
   }
 
-  const state: AppState = { cfg, workdir: defaultWorkdir(), agent: null };
+  const state: AppState = { cfg, workdir: defaultWorkdir(cfg.carpetaProyectos), agent: null };
   mkdirSync(state.workdir, { recursive: true });
 
-  const rl = readline.createInterface({ input: process.stdin, output: process.stdout });
   let controller: AbortController | null = null;
-  rl.on('SIGINT', () => {
+  const rl = new LineInput(() => {
     if (controller) {
       controller.abort();
       ui.warn('Cancelando…');
@@ -36,7 +36,7 @@ async function main(): Promise<void> {
   });
 
   const confirm = async (q: string): Promise<boolean> => {
-    const a = (await rl.question(ui.paint('yellow', `? ${q} (s/n) `))).trim().toLowerCase();
+    const a = ((await rl.ask(ui.paint('yellow', `? ${q} (s/n) `))) ?? '').trim().toLowerCase();
     return a === 's' || a === 'si' || a === 'sí' || a === 'y';
   };
 
@@ -49,12 +49,9 @@ async function main(): Promise<void> {
   }
 
   for (;;) {
-    let line: string;
-    try {
-      line = (await rl.question(ui.paint(['bold', 'yellow'], 'forja › '))).trim();
-    } catch {
-      return;
-    }
+    const input = await rl.ask(ui.paint(['bold', 'yellow'], 'forja › '));
+    if (input === null) break;
+    const line = input.trim();
     if (!line) continue;
 
     controller = new AbortController();
@@ -68,9 +65,9 @@ async function main(): Promise<void> {
         }
         const outcome = await command.run(rest.join(' ').trim(), { state, confirm, signal: controller.signal });
         if (outcome === 'exit') break;
-        if (outcome === 'restart') {
+        if (outcome === 'restart' || outcome === 'evolve') {
           rl.close();
-          process.exit(RESTART_CODE);
+          process.exit(outcome === 'restart' ? RESTART_CODE : EVOLVE_CODE);
         }
         continue;
       }

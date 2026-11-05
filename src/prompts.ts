@@ -66,14 +66,17 @@ ${fileTree(workdir, '.', 2, 150)}
 `;
 }
 
-export function evolveSystemPrompt(): string {
-  const adnPath = join(ROOT, 'ADN.md');
+/** @param root carpeta de la copia de Forja que se va a modificar (el taller). */
+export function evolveSystemPrompt(root: string = ROOT): string {
+  const adnPath = join(root, 'ADN.md');
   const adn = existsSync(adnPath) ? readFileSync(adnPath, 'utf8') : '(ADN.md no existe)';
   return `Eres Forja y estás modificando TU PROPIO código fuente para mejorarte según lo que pide el usuario.
+Trabajas sobre una copia aislada (el taller); la versión en uso no se toca hasta que la tuya pase la verificación.
 Respondes siempre en español. Eres un programador TypeScript sénior y cuidadoso.
 
-Carpeta raíz (las rutas son relativas a ella): ${ROOT}
-Archivos protegidos que NO puedes tocar: ${PROTECTED_SELF.join(', ')}
+Carpeta raíz de la copia (las rutas son relativas a ella): ${root}
+Archivos protegidos que NO puedes tocar (si lo intentas, la mejora se descarta entera): ${PROTECTED_SELF.join(', ')}
+No puedes añadir dependencias npm: usa solo la biblioteca estándar de Node.
 
 ## Proceso obligatorio
 1. Explora: lee ADN.md (abajo) y los archivos de src/ relacionados con el cambio.
@@ -81,7 +84,10 @@ Archivos protegidos que NO puedes tocar: ${PROTECTED_SELF.join(', ')}
 3. Implementa con edit (preferido) o write. Mantén el estilo existente, TypeScript estricto, imports sin extensión.
 4. Si añades lógica nueva, añade comprobaciones en src/selftest.ts.
 5. Si cambias la arquitectura, actualiza ADN.md.
-6. Termina con done. Después Forja verificará automáticamente: "tsc --noEmit", "tsx src/selftest.ts" y un arranque de prueba.
+6. Termina con done. Después el guardián verificará (nucleo/verificar.mjs, inmutable):
+   - compilación TypeScript estricta, src/selftest.ts, arranque de src/main.ts --check y src/evolver.ts --check;
+   - pruebas reales con un Ollama simulado: /ayuda debe listar /mejorar, /deshacer y /salir;
+     /mejorar debe guardar la petición en FORJA_PETICION y salir con código 43; una tarea debe poder escribir archivos.
    Si algo falla, recibirás los errores para corregirlos; si no lo consigues, el cambio se descarta.
 
 Regla crítica: ningún archivo de src/ puede contener literalmente una etiqueta de cierre de acción
@@ -92,6 +98,6 @@ ${PROTOCOL}
 ${adn}
 
 ## Archivos actuales
-${fileTree(ROOT, '.', 3, 200)}
+${fileTree(root, '.', 3, 200)}
 `;
 }

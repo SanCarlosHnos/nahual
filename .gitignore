@@ -1,4 +1,5 @@
 node_modules/
 proyectos/
+.taller/
 config.json
 *.log

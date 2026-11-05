@@ -1,6 +1,6 @@
-import { existsSync, readFileSync, writeFileSync } from 'node:fs';
+import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
-import { ROOT } from './paths';
+import { CONFIG_DIR } from './paths';
 
 export interface Config {
   /** Modelo de Ollama principal. */
@@ -13,8 +13,10 @@ export interface Config {
   maxSteps: number;
   /** Intentos de corrección cuando la verificación de una mejora falla. */
   maxFixAttempts: number;
-  /** Si es true, ejecuta comandos sin pedir confirmación. */
+  /** Si es true, ejecuta comandos sin pedir confirmación (nunca en mejoras). */
   autoApproveCommands: boolean;
+  /** Carpeta por defecto para los proyectos. */
+  carpetaProyectos: string;
 }
 
 export const DEFAULTS: Config = {
@@ -25,19 +27,26 @@ export const DEFAULTS: Config = {
   maxSteps: 30,
   maxFixAttempts: 3,
   autoApproveCommands: false,
+  carpetaProyectos: '',
 };
 
-const FILE = join(ROOT, 'config.json');
+const FILE = join(CONFIG_DIR, 'config.json');
 
 export function loadConfig(): Config {
-  if (!existsSync(FILE)) return { ...DEFAULTS };
-  try {
-    return { ...DEFAULTS, ...(JSON.parse(readFileSync(FILE, 'utf8')) as Partial<Config>) };
-  } catch {
-    return { ...DEFAULTS };
+  let cfg: Config = { ...DEFAULTS };
+  if (existsSync(FILE)) {
+    try {
+      cfg = { ...DEFAULTS, ...(JSON.parse(readFileSync(FILE, 'utf8').replace(/^﻿/, '')) as Partial<Config>) };
+    } catch {
+      // config dañada: se usan los valores por defecto
+    }
   }
+  if (process.env.FORJA_MODEL) cfg.model = process.env.FORJA_MODEL;
+  if (process.env.FORJA_OLLAMA_URL) cfg.ollamaUrl = process.env.FORJA_OLLAMA_URL;
+  return cfg;
 }
 
 export function saveConfig(cfg: Config): void {
+  mkdirSync(CONFIG_DIR, { recursive: true });
   writeFileSync(FILE, JSON.stringify(cfg, null, 2) + '\n');
 }

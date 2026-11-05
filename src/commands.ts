@@ -1,8 +1,8 @@
-import { existsSync, mkdirSync } from 'node:fs';
-import { resolve } from 'node:path';
+import { existsSync, mkdirSync, writeFileSync } from 'node:fs';
+import { dirname, resolve } from 'node:path';
 import type { Agent } from './agent';
 import { saveConfig, type Config } from './config';
-import { ensureRepo, evolve, git } from './evolve';
+import { git } from './git';
 import { listModels } from './ollama';
 import { ui } from './ui';
 
@@ -19,8 +19,11 @@ export interface CommandContext {
   signal: AbortSignal;
 }
 
-/** 'exit' cierra Forja; 'restart' la reinicia cargando el código nuevo. */
-export type CommandOutcome = void | 'exit' | 'restart';
+/**
+ * 'exit' cierra Forja; 'restart' la reinicia cargando el código nuevo;
+ * 'evolve' sale con código 43 para que el guardián aplique la mejora pedida.
+ */
+export type CommandOutcome = void | 'exit' | 'restart' | 'evolve';
 
 export interface Command {
   name: string;
@@ -46,18 +49,21 @@ export const commands: Command[] = [
   {
     name: 'mejorar',
     args: '<qué quieres que aprenda>',
-    description: 'Forja modifica su propio código, se verifica y se reinicia',
-    async run(args, { state, confirm, signal }) {
+    description: 'Forja mejora su propio código en una copia aislada; el guardián la verifica antes de aplicarla',
+    async run(args) {
       if (!args) return ui.warn('Uso: /mejorar <descripción de la mejora>');
-      const outcome = await evolve(args, state.cfg, confirm, signal);
-      if (outcome === 'applied' && (await confirm('¿Reiniciar ahora para usar la nueva versión?'))) return 'restart';
+      const file = process.env.FORJA_PETICION;
+      if (!file) return ui.error('Las mejoras solo funcionan si Forja se abre con el comando "forja" (supervisor).');
+      mkdirSync(dirname(file), { recursive: true });
+      writeFileSync(file, JSON.stringify({ instruccion: args, fecha: new Date().toISOString() }));
+      ui.info('Entregando la petición al guardián…');
+      return 'evolve';
     },
   },
   {
     name: 'deshacer',
     description: 'Revierte la última mejora y reinicia',
     async run(_args, { confirm }) {
-      ensureRepo();
       const last = git('log', '-1', '--pretty=%s').out;
       if (!last.startsWith('mejora:')) return ui.warn(`El último cambio no es una mejora («${last}»).`);
       if (!(await confirm(`¿Revertir «${last}»?`))) return;
@@ -71,7 +77,6 @@ export const commands: Command[] = [
     name: 'historial',
     description: 'Muestra la evolución de Forja (commits)',
     async run() {
-      ensureRepo();
       console.log(git('log', '--pretty=format:%h  %ad  %s', '--date=short', '-n', '30').out || '(sin historial)');
     },
   },

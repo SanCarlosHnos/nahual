@@ -1,0 +1,15 @@
+{
+  "protegidos": [
+    "supervisor.mjs",
+    "nucleo",
+    "instalar.ps1",
+    "desinstalar.ps1",
+    "package.json",
+    "package-lock.json",
+    "tsconfig.json",
+    ".gitignore",
+    ".git",
+    "node_modules",
+    ".taller"
+  ]
+}

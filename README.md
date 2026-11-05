@@ -1,33 +1,38 @@
 # ⚒ Forja
 
-IA local de terminal (TypeScript + Ollama) que construye software completo y **se mejora a sí misma** a partir de tus indicaciones.
+IA local de terminal (TypeScript + Ollama) que construye software completo y **se mejora a sí misma** de forma segura.
 
-## Arrancar
+## Instalar
 
-```bash
-cd forja
-npm install
-npm start
+En PowerShell, dentro de esta carpeta:
+
+```powershell
+powershell -ExecutionPolicy Bypass -File .\instalar.ps1
 ```
 
-Para tenerla como comando global (`forja` desde cualquier carpeta, y trabajará en esa carpeta):
-
-```bash
-npm link
-```
-
-Requiere Ollama abierto. Modelo por defecto: `huihui_ai/qwen2.5-coder-abliterate:14b` (cámbialo con `/modelo`).
+Se instala en `%LOCALAPPDATA%\Programs\Forja`, con accesos directos en el menú Inicio y el escritorio, y el comando `forja` en cualquier terminal.
+Tus proyectos van a `Documentos\Forja` y los ajustes a `%APPDATA%\Forja\config.json`.
+Esta carpeta queda como la «fábrica»: la copia instalada es la que evoluciona.
 
 ## Uso
 
-- Escribe una instrucción normal → Forja planifica, escribe el código, lo compila y corrige errores en la carpeta de trabajo (`proyectos/` por defecto, o la carpeta donde la lanzaste).
-- `/mejorar <indicación>` → Forja edita **su propio código**, pasa la verificación (tsc + autopruebas + arranque) y, si todo va bien, guarda un commit y se reinicia con la nueva versión.
-- `/deshacer` revierte la última mejora. `/historial` muestra todas las mejoras.
-- `/ayuda` lista el resto de comandos.
+- Escribe una instrucción normal → Forja planifica, escribe el código, lo compila y corrige errores.
+- `/mejorar <indicación>` → Forja se mejora a sí misma (ver abajo).
+- `/deshacer` revierte la última mejora · `/historial` muestra la evolución · `/ayuda` lista todo.
 
-## Seguridad de la auto-mejora
+## Por qué no puede dañarse sola
 
-- `supervisor.mjs` está protegido: la IA no puede tocarlo.
-- Cada mejora es un commit de git; si no pasa la verificación se descarta sola.
-- Si una versión nueva se cae al arrancar, el supervisor revierte la mejora automáticamente.
-- Los comandos de terminal piden confirmación (desactivable con `/auto si`).
+1. **Taller aislado**: la IA trabaja sobre una copia (git worktree). La versión que usas no se toca.
+2. **Núcleo protegido**: el supervisor, el guardián y las pruebas (`nucleo/`) no se pueden modificar; si una mejora lo intenta, se descarta entera.
+3. **Pruebas inmutables**: compilación estricta + autopruebas + pruebas reales de la interfaz con un Ollama simulado (que `/mejorar`, `/deshacer` y las tareas sigan funcionando).
+4. **Solo se aplica lo verificado**: si no pasa, se borra el taller y Forja queda igual.
+5. **Vuelta automática**: si una versión nueva no arranca, el supervisor vuelve a la última que funcionó.
+6. **Rescate manual**, aunque todo lo demás falle:
+
+```powershell
+forja --deshacer     # revierte la última mejora
+forja --rescate      # vuelve a la versión de fábrica
+forja --historial    # muestra todas las versiones
+```
+
+En las mejoras, cada comando de terminal que quiera ejecutar la IA te pide permiso.
