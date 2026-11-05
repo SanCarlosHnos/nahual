@@ -29,19 +29,23 @@ const RUTA = `(?:ruta|path)`;
 //  1 nombre leer/listar · 2 ruta · 3 patrón · 4 ruta de búsqueda · 5 nombre escribir · 6 ruta · 7 contenido
 //  8 nombre editar · 9 ruta · 10 cuerpo · 11 nombre ejecutar · 12 comando · 13 plan · 14 paso hecho
 // 15 pregunta · 16 dato · 17 búsqueda en el equipo · 18 nombre terminar · 19 resumen
+// Nota: los modelos locales a veces omiten el «>» de la etiqueta de apertura
+// (por ejemplo «<terminarListo…» en vez de «<terminar>Listo…»). Por eso ese «>»
+// se marca como opcional (>?) en las etiquetas con cuerpo, y el cierre, que estos
+// modelos sí suelen escribir, es el que delimita el contenido.
 const EXPRESION_ACCIONES = new RegExp(
   [
-    `<(leer|read|listar|list)\\s+${RUTA}=${Q}\\s*\\/?>`,
-    `<(?:buscar|search)\\s+(?:patron|patrón|pattern)=${Q}(?:\\s+${RUTA}=${Q})?\\s*\\/?>`,
-    `<(escribir|write)\\s+${RUTA}=${Q}\\s*>([\\s\\S]*?)<\\/\\5>`,
-    `<(editar|edit)\\s+${RUTA}=${Q}\\s*>([\\s\\S]*?)<\\/\\8>`,
-    `<(ejecutar|run)>([\\s\\S]*?)<\\/\\11>`,
-    `<plan>([\\s\\S]*?)<\\/plan>`,
-    `<hecho\\s+paso=["']?(\\d+)["']?\\s*\\/?>`,
-    `<preguntar>([\\s\\S]*?)<\\/preguntar>`,
-    `<recordar>([\\s\\S]*?)<\\/recordar>`,
-    `<equipo(?:\\s+buscar=${Q})?\\s*\\/?>`,
-    `<(terminar|done)>([\\s\\S]*?)<\\/\\18>`,
+    `<(leer|read|listar|list)\\s+${RUTA}=${Q}\\s*\\/?>?`,
+    `<(?:buscar|search)\\s+(?:patron|patrón|pattern)=${Q}(?:\\s+${RUTA}=${Q})?\\s*\\/?>?`,
+    `<(escribir|write)\\s+${RUTA}=${Q}\\s*>?([\\s\\S]*?)<\\/\\5>`,
+    `<(editar|edit)\\s+${RUTA}=${Q}\\s*>?([\\s\\S]*?)<\\/\\8>`,
+    `<(ejecutar|run)\\s*>?([\\s\\S]*?)<\\/\\11>`,
+    `<plan\\s*>?([\\s\\S]*?)<\\/plan>`,
+    `<hecho\\s+paso=["']?(\\d+)["']?\\s*\\/?>?`,
+    `<preguntar\\s*>?([\\s\\S]*?)<\\/preguntar>`,
+    `<recordar\\s*>?([\\s\\S]*?)<\\/recordar>`,
+    `<equipo(?:\\s+buscar=${Q})?\\s*\\/?>?`,
+    `<(terminar|done)\\s*>?([\\s\\S]*?)<\\/\\18>`,
   ].join('|'),
   'g',
 );

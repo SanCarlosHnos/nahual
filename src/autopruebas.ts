@@ -66,6 +66,10 @@ comprobar('editar extrae el bloque', editar?.tipo === 'editar' && editar.bloques
 const plan = acciones[3];
 comprobar('plan extrae los pasos', plan?.tipo === 'plan' && plan.pasos.length === 2 && plan.pasos[0] === 'uno');
 comprobar('acepta etiquetas en inglés', analizarAcciones('<read path="x"/>').length === 1);
+// El modelo local a veces omite el «>» de apertura: debe reconocerse igual y detectar el fin.
+const sinMayor = analizarAcciones('<terminarListo, ya quedó.' + c('terminar'));
+comprobar('tolera que falte el «>» en terminar', sinMayor.length === 1 && sinMayor[0]?.tipo === 'terminar');
+comprobar('tolera que falte el «>» en escribir', analizarAcciones('<escribir ruta="a.txt"hola' + c('escribir'))[0]?.tipo === 'escribir');
 comprobar('ignora bloques de razonamiento', analizarAcciones('<think><leer ruta="x"/></think>hola').length === 0);
 comprobar('extraerTexto quita las acciones', extraerTexto('hola <leer ruta="x"/> mundo').includes('hola') && !extraerTexto('hola <leer ruta="x"/>').includes('leer'));
 comprobar('describirAccion da nombre en español', describirAccion(acciones[0]!).nombre === 'Listar');
