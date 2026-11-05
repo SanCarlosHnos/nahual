@@ -1,64 +1,81 @@
 import type { Config } from './config';
 
-export interface Msg {
+/** Mensaje de la conversación (los nombres de campo los impone la API de Ollama). */
+export interface Mensaje {
   role: 'system' | 'user' | 'assistant';
   content: string;
 }
 
-/** Envía la conversación a Ollama y devuelve la respuesta completa (con streaming opcional). */
-export async function chat(
-  cfg: Config,
-  messages: Msg[],
-  onToken?: (token: string) => void,
-  signal?: AbortSignal,
-): Promise<string> {
-  let res: Response;
+export interface OpcionesConversar {
+  /** Se llama con cada fragmento generado y el total de fragmentos hasta ahora. */
+  alToken?: (fragmento: string, total: number) => void;
+  senal?: AbortSignal;
+  /** Límite de tokens de la respuesta. */
+  maxTokens?: number;
+  temperatura?: number;
+}
+
+/** Envía la conversación a Ollama y devuelve la respuesta completa. */
+export async function conversar(cfg: Config, mensajes: Mensaje[], op: OpcionesConversar = {}): Promise<string> {
+  let respuesta: Response;
   try {
-    res = await fetch(`${cfg.ollamaUrl}/api/chat`, {
+    respuesta = await fetch(`${cfg.urlOllama}/api/chat`, {
       method: 'POST',
       headers: { 'content-type': 'application/json' },
       body: JSON.stringify({
-        model: cfg.model,
-        messages,
+        model: cfg.modelo,
+        messages: mensajes,
         stream: true,
-        options: { num_ctx: cfg.numCtx, temperature: cfg.temperature },
+        options: {
+          num_ctx: cfg.contexto,
+          temperature: op.temperatura ?? cfg.temperatura,
+          top_p: 0.9,
+          repeat_penalty: 1.1,
+          ...(op.maxTokens ? { num_predict: op.maxTokens } : {}),
+        },
       }),
-      signal,
+      signal: op.senal,
     });
   } catch (e) {
-    if (signal?.aborted) throw e;
-    throw new Error(`No se pudo conectar con Ollama en ${cfg.ollamaUrl}. ¿Está abierto? (${(e as Error).message})`);
+    if (op.senal?.aborted) throw e;
+    throw new Error(`No pude conectarme con Ollama en ${cfg.urlOllama}. ¿Está abierto? (${(e as Error).message})`);
   }
-  if (!res.ok || !res.body) throw new Error(`Ollama respondió ${res.status}: ${await res.text()}`);
+  if (!respuesta.ok || !respuesta.body) throw new Error(`Ollama respondió ${respuesta.status}: ${await respuesta.text()}`);
 
-  const reader = res.body.getReader();
-  const decoder = new TextDecoder();
-  let buffer = '';
-  let out = '';
+  const lector = respuesta.body.getReader();
+  const decodificador = new TextDecoder();
+  let pendiente = '';
+  let texto = '';
+  let total = 0;
   for (;;) {
-    const { done, value } = await reader.read();
+    const { done, value } = await lector.read();
     if (done) break;
-    buffer += decoder.decode(value, { stream: true });
-    let nl: number;
-    while ((nl = buffer.indexOf('\n')) >= 0) {
-      const line = buffer.slice(0, nl).trim();
-      buffer = buffer.slice(nl + 1);
-      if (!line) continue;
-      const data = JSON.parse(line) as { message?: { content?: string }; error?: string };
-      if (data.error) throw new Error(`Ollama: ${data.error}`);
-      const token = data.message?.content ?? '';
-      if (token) {
-        out += token;
-        onToken?.(token);
+    pendiente += decodificador.decode(value, { stream: true });
+    let salto: number;
+    while ((salto = pendiente.indexOf('\n')) >= 0) {
+      const linea = pendiente.slice(0, salto).trim();
+      pendiente = pendiente.slice(salto + 1);
+      if (!linea) continue;
+      const datos = JSON.parse(linea) as { message?: { content?: string }; error?: string };
+      if (datos.error) throw new Error(`Ollama: ${datos.error}`);
+      const fragmento = datos.message?.content ?? '';
+      if (fragmento) {
+        texto += fragmento;
+        op.alToken?.(fragmento, ++total);
       }
     }
   }
-  return out;
+  return texto;
 }
 
-export async function listModels(cfg: Config): Promise<string[]> {
-  const res = await fetch(`${cfg.ollamaUrl}/api/tags`);
-  if (!res.ok) throw new Error(`Ollama respondió ${res.status}`);
-  const data = (await res.json()) as { models: { name: string }[] };
-  return data.models.map((m) => m.name);
+export async function listarModelos(cfg: Config): Promise<string[]> {
+  const respuesta = await fetch(`${cfg.urlOllama}/api/tags`);
+  if (!respuesta.ok) throw new Error(`Ollama respondió ${respuesta.status}`);
+  const datos = (await respuesta.json()) as { models: { name: string }[] };
+  return datos.models.map((m) => m.name);
+}
+
+/** Indica si un modelo está instalado (acepta el sufijo «:latest»). */
+export function modeloInstalado(modelos: string[], nombre: string): boolean {
+  return modelos.some((m) => m === nombre || m === `${nombre}:latest`);
 }

@@ -1,52 +1,56 @@
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
-import { CONFIG_DIR } from './paths';
+import { DIR_DATOS } from './rutas';
 
 export interface Config {
-  /** Modelo de Ollama principal. */
-  model: string;
-  ollamaUrl: string;
-  /** Tamaño de contexto en tokens que se pide a Ollama. */
-  numCtx: number;
-  temperature: number;
-  /** Máximo de turnos del agente por instrucción. */
-  maxSteps: number;
-  /** Intentos de corrección cuando la verificación de una mejora falla. */
-  maxFixAttempts: number;
-  /** Si es true, ejecuta comandos sin pedir confirmación (nunca en mejoras). */
-  autoApproveCommands: boolean;
-  /** Carpeta por defecto para los proyectos. */
+  /** Modelo de Ollama que usa Nahual (el modelo propio «nahual», creado a partir de modeloBase). */
+  modelo: string;
+  /** Modelo de Ollama a partir del cual se construye el modelo propio. */
+  modeloBase: string;
+  urlOllama: string;
+  /** Tamaño de contexto en tokens. */
+  contexto: number;
+  temperatura: number;
+  /** Máximo de turnos del agente por petición. */
+  maxPasos: number;
+  /** Intentos de corrección cuando falla la verificación de una mejora. */
+  maxCorrecciones: number;
+  /** Ejecutar comandos sin pedir permiso (nunca aplica en mejoras). */
+  autoAprobar: boolean;
+  /** Carpeta predeterminada para los proyectos. */
   carpetaProyectos: string;
 }
 
-export const DEFAULTS: Config = {
-  model: 'huihui_ai/qwen2.5-coder-abliterate:14b',
-  ollamaUrl: 'http://127.0.0.1:11434',
-  numCtx: 16384,
-  temperature: 0.2,
-  maxSteps: 30,
-  maxFixAttempts: 3,
-  autoApproveCommands: false,
+export const PREDETERMINADA: Config = {
+  modelo: 'nahual',
+  modeloBase: 'huihui_ai/qwen2.5-coder-abliterate:14b',
+  urlOllama: 'http://127.0.0.1:11434',
+  contexto: 16384,
+  temperatura: 0.2,
+  maxPasos: 30,
+  maxCorrecciones: 3,
+  autoAprobar: false,
   carpetaProyectos: '',
 };
 
-const FILE = join(CONFIG_DIR, 'config.json');
+const ARCHIVO = join(DIR_DATOS, 'config.json');
 
-export function loadConfig(): Config {
-  let cfg: Config = { ...DEFAULTS };
-  if (existsSync(FILE)) {
+export function cargarConfig(): Config {
+  let cfg: Config = { ...PREDETERMINADA };
+  if (existsSync(ARCHIVO)) {
     try {
-      cfg = { ...DEFAULTS, ...(JSON.parse(readFileSync(FILE, 'utf8').replace(/^﻿/, '')) as Partial<Config>) };
+      const datos = JSON.parse(readFileSync(ARCHIVO, 'utf8').replace(/^﻿/, '')) as Partial<Config>;
+      cfg = { ...PREDETERMINADA, ...datos };
     } catch {
-      // config dañada: se usan los valores por defecto
+      // configuración dañada: se usan los valores predeterminados
     }
   }
-  if (process.env.FORJA_MODEL) cfg.model = process.env.FORJA_MODEL;
-  if (process.env.FORJA_OLLAMA_URL) cfg.ollamaUrl = process.env.FORJA_OLLAMA_URL;
+  if (process.env.NAHUAL_MODELO) cfg.modelo = process.env.NAHUAL_MODELO;
+  if (process.env.NAHUAL_OLLAMA) cfg.urlOllama = process.env.NAHUAL_OLLAMA;
   return cfg;
 }
 
-export function saveConfig(cfg: Config): void {
-  mkdirSync(CONFIG_DIR, { recursive: true });
-  writeFileSync(FILE, JSON.stringify(cfg, null, 2) + '\n');
+export function guardarConfig(cfg: Config): void {
+  mkdirSync(DIR_DATOS, { recursive: true });
+  writeFileSync(ARCHIVO, JSON.stringify(cfg, null, 2) + '\n');
 }

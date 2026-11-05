@@ -1,22 +1,27 @@
 {
-  "name": "forja",
-  "version": "0.1.0",
-  "description": "IA local de terminal que construye software y se mejora a sí misma",
+  "name": "nahual",
+  "version": "0.3.0",
+  "description": "Nahual: IA local de terminal que construye software y se mejora a sí misma",
   "type": "module",
   "private": true,
   "bin": {
-    "forja": "supervisor.mjs"
+    "nahual": "supervisor.mjs"
   },
   "scripts": {
     "start": "node supervisor.mjs",
     "check": "tsc --noEmit",
-    "selftest": "tsx src/selftest.ts"
+    "autopruebas": "tsx src/autopruebas.ts",
+    "verificar": "node nucleo/verificar.mjs ."
   },
   "dependencies": {
+    "ink": "^8.0.0",
+    "ink-text-input": "^6.0.0",
+    "react": "^19.3.1",
     "tsx": "^4.23.15"
   },
   "devDependencies": {
     "@types/node": "^26.6.6",
+    "@types/react": "^19.3.0",
     "typescript": "^7.0.2"
   }
 }
