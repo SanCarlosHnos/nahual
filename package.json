@@ -1,0 +1,22 @@
+{
+  "name": "forja",
+  "version": "0.1.0",
+  "description": "IA local de terminal que construye software y se mejora a sí misma",
+  "type": "module",
+  "private": true,
+  "bin": {
+    "forja": "supervisor.mjs"
+  },
+  "scripts": {
+    "start": "node supervisor.mjs",
+    "check": "tsc --noEmit",
+    "selftest": "tsx src/selftest.ts"
+  },
+  "dependencies": {
+    "tsx": "^4.23.15"
+  },
+  "devDependencies": {
+    "@types/node": "^26.6.6",
+    "typescript": "^7.0.2"
+  }
+}

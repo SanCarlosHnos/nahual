@@ -1,0 +1,4 @@
+node_modules/
+proyectos/
+config.json
+*.log
