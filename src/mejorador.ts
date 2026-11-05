@@ -67,7 +67,12 @@ async function main(): Promise<number> {
       return 3;
     }
 
-    const eleccion = await ui.elegir('¿Apruebo este plan y lo implemento?', ['Sí, adelante', 'No, cancelar'], agente.plan.map((p, i) => `${i + 1}. ${p.texto}`).join('\n'));
+    // NAHUAL_APROBAR_PLAN=1 aprueba el plan sin preguntar; solo lo usan las pruebas automatizadas.
+    // El supervisor real nunca lo activa, así que en el uso normal siempre decides tú.
+    const aprobacionAutomatica = process.env.NAHUAL_APROBAR_PLAN === '1';
+    const eleccion = aprobacionAutomatica
+      ? 0
+      : await ui.elegir('¿Apruebo este plan y lo implemento?', ['Sí, adelante', 'No, cancelar'], agente.plan.map((p, i) => `${i + 1}. ${p.texto}`).join('\n'));
     if (eleccion !== 0) {
       ui.emitir({ tipo: 'info', texto: 'Mejora cancelada. No cambié nada.' });
       return 3;
