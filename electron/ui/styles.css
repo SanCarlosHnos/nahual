@@ -1,0 +1,539 @@
+:root {
+  --fondo: #0f1021;
+  --fondo-2: #171933;
+  --panel: #14152b;
+  --borde: #2a2c52;
+  --texto: #e7e8ff;
+  --tenue: #9aa0c7;
+  --acento: #7b6bff;
+  --acento-2: #4ad6c8;
+  --verde: #46d47e;
+  --rojo: #ff6b7a;
+  --amarillo: #ffcf5c;
+  --burbuja-user: #2a2c57;
+  --burbuja-ia: #1b1d3a;
+  font-size: 15px;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  margin: 0;
+  height: 100%;
+  background: var(--fondo);
+  color: var(--texto);
+  font-family: "Segoe UI", system-ui, -apple-system, sans-serif;
+  overflow: hidden;
+}
+
+#app {
+  display: flex;
+  height: 100vh;
+}
+
+/* ---------- Panel del avatar ---------- */
+#panel-avatar {
+  width: 320px;
+  min-width: 260px;
+  background: linear-gradient(180deg, var(--fondo-2), var(--fondo));
+  border-right: 1px solid var(--borde);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  padding: 24px;
+}
+
+#avatar {
+  width: 240px;
+  height: 260px;
+}
+#avatar svg {
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+}
+
+#nombre-avatar {
+  font-size: 1.5rem;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+}
+#estado-avatar {
+  color: var(--tenue);
+  font-size: 0.85rem;
+}
+
+/* Cuerpo flotando */
+#cuerpo-grupo {
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: flotar 4s ease-in-out infinite;
+}
+@keyframes flotar {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-10px);
+  }
+}
+
+/* Parpadeo */
+.ojo {
+  fill: #0e0f22;
+}
+.pupila {
+  fill: #cfe9ff;
+  animation: parpadeo 5s infinite;
+}
+#boca {
+  fill: none;
+  stroke: #0e0f22;
+  stroke-width: 4;
+  stroke-linecap: round;
+  transition: d 0.2s;
+}
+@keyframes parpadeo {
+  0%,
+  92%,
+  100% {
+    transform: scaleY(1);
+  }
+  95% {
+    transform: scaleY(0.1);
+  }
+}
+.pupila {
+  transform-box: fill-box;
+  transform-origin: center;
+}
+
+/* Órbitas y chispas (ocultas en reposo) */
+.orbita {
+  fill: none;
+  stroke: var(--acento);
+  stroke-width: 1.2;
+  stroke-dasharray: 4 10;
+  opacity: 0;
+  transform-box: fill-box;
+  transform-origin: center;
+  transition: opacity 0.4s;
+}
+.chispa {
+  fill: var(--acento-2);
+  opacity: 0;
+  transform-box: fill-box;
+  transform-origin: center;
+  transition: opacity 0.4s;
+}
+#aura {
+  opacity: 0.5;
+  transform-box: fill-box;
+  transform-origin: center;
+}
+#sombra {
+  fill: #000;
+  opacity: 0.25;
+  animation: sombra 4s ease-in-out infinite;
+}
+@keyframes sombra {
+  0%,
+  100% {
+    transform: scale(1);
+    opacity: 0.25;
+  }
+  50% {
+    transform: scale(0.82);
+    opacity: 0.18;
+  }
+}
+
+/* Estado: pensando */
+#avatar[data-estado="pensando"] .orbita,
+#avatar[data-estado="trabajando"] .orbita {
+  opacity: 0.8;
+}
+#avatar[data-estado="pensando"] .o1 {
+  animation: girar 6s linear infinite;
+}
+#avatar[data-estado="pensando"] .o2 {
+  animation: girar 9s linear infinite reverse;
+}
+#avatar[data-estado="pensando"] .chispa,
+#avatar[data-estado="trabajando"] .chispa {
+  opacity: 1;
+  animation: titilar 1.4s ease-in-out infinite;
+}
+#avatar[data-estado="pensando"] #aura {
+  animation: latir 2s ease-in-out infinite;
+}
+
+/* Estado: trabajando */
+#avatar[data-estado="trabajando"] .o1 {
+  animation: girar 2.2s linear infinite;
+}
+#avatar[data-estado="trabajando"] .o2 {
+  animation: girar 3s linear infinite reverse;
+}
+#avatar[data-estado="trabajando"] #aura {
+  animation: latir 1s ease-in-out infinite;
+}
+
+/* Estado: hablando */
+#avatar[data-estado="hablando"] #boca {
+  animation: hablar 0.35s ease-in-out infinite;
+}
+#avatar[data-estado="hablando"] #aura {
+  animation: latir 1.6s ease-in-out infinite;
+}
+
+@keyframes girar {
+  to {
+    transform: rotate(360deg);
+  }
+}
+@keyframes titilar {
+  0%,
+  100% {
+    transform: scale(0.6);
+    opacity: 0.4;
+  }
+  50% {
+    transform: scale(1.3);
+    opacity: 1;
+  }
+}
+@keyframes latir {
+  0%,
+  100% {
+    transform: scale(1);
+    opacity: 0.4;
+  }
+  50% {
+    transform: scale(1.18);
+    opacity: 0.75;
+  }
+}
+@keyframes hablar {
+  0%,
+  100% {
+    transform: scaleY(1);
+  }
+  50% {
+    transform: scaleY(0.4);
+  }
+}
+
+/* ---------- Conversación ---------- */
+#conversacion {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+#mensajes {
+  flex: 1;
+  overflow-y: auto;
+  padding: 24px 28px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  scroll-behavior: smooth;
+}
+
+.bienvenida {
+  background: linear-gradient(135deg, rgba(123, 107, 255, 0.18), rgba(74, 214, 200, 0.1));
+  border: 1px solid var(--borde);
+  border-radius: 16px;
+  padding: 18px 20px;
+}
+.bienvenida h1 {
+  margin: 0 0 4px;
+  font-size: 1.4rem;
+}
+.bienvenida .sub {
+  color: var(--tenue);
+  font-size: 0.85rem;
+  margin-bottom: 10px;
+}
+.bienvenida ul {
+  margin: 0;
+  padding-left: 18px;
+  color: var(--tenue);
+  font-size: 0.9rem;
+}
+
+.fila {
+  display: flex;
+  max-width: 100%;
+}
+.fila.user {
+  justify-content: flex-end;
+}
+.burbuja {
+  max-width: 78%;
+  padding: 11px 15px;
+  border-radius: 16px;
+  line-height: 1.5;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+.user .burbuja {
+  background: var(--burbuja-user);
+  border-bottom-right-radius: 4px;
+}
+.ia .burbuja {
+  background: var(--burbuja-ia);
+  border: 1px solid var(--borde);
+  border-bottom-left-radius: 4px;
+}
+.burbuja code {
+  background: #000a;
+  padding: 1px 5px;
+  border-radius: 5px;
+  font-family: "Cascadia Code", "Consolas", monospace;
+  font-size: 0.86em;
+}
+.burbuja strong {
+  color: #fff;
+}
+
+.accion {
+  display: flex;
+  gap: 8px;
+  align-items: baseline;
+  color: var(--texto);
+  font-size: 0.9rem;
+}
+.accion .punto {
+  color: var(--verde);
+}
+.accion .detalle {
+  color: var(--tenue);
+}
+.resultado {
+  margin-left: 18px;
+  border-left: 2px solid var(--borde);
+  padding: 4px 0 4px 12px;
+  font-family: "Cascadia Code", "Consolas", monospace;
+  font-size: 0.82rem;
+  color: var(--tenue);
+}
+.resultado.error {
+  color: var(--rojo);
+  border-color: var(--rojo);
+}
+.dif-mas {
+  color: var(--verde);
+}
+.dif-menos {
+  color: var(--rojo);
+}
+
+.sistema {
+  font-size: 0.88rem;
+  padding: 2px 0;
+}
+.sistema.info {
+  color: var(--acento-2);
+}
+.sistema.exito {
+  color: var(--verde);
+}
+.sistema.aviso {
+  color: var(--amarillo);
+}
+.sistema.error {
+  color: var(--rojo);
+}
+
+.bloque {
+  background: var(--panel);
+  border: 1px solid var(--borde);
+  border-radius: 12px;
+  padding: 14px 16px;
+}
+.bloque h3 {
+  margin: 0 0 8px;
+  font-size: 1rem;
+}
+.bloque .linea {
+  font-size: 0.88rem;
+  color: var(--tenue);
+  white-space: pre-wrap;
+  font-family: "Cascadia Code", "Consolas", monospace;
+}
+
+.plan {
+  background: var(--panel);
+  border: 1px solid var(--borde);
+  border-radius: 12px;
+  padding: 12px 16px;
+}
+.plan h3 {
+  margin: 0 0 8px;
+  font-size: 0.95rem;
+}
+.plan .paso {
+  display: flex;
+  gap: 8px;
+  padding: 2px 0;
+  color: var(--texto);
+  font-size: 0.9rem;
+}
+.plan .paso.hecho {
+  color: var(--tenue);
+  text-decoration: line-through;
+}
+.plan .marca {
+  color: var(--verde);
+}
+
+#pensando {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  color: var(--acento);
+  font-size: 0.9rem;
+  padding: 2px 4px;
+}
+#pensando.oculto {
+  display: none;
+}
+.puntos span {
+  display: inline-block;
+  width: 7px;
+  height: 7px;
+  margin-right: 3px;
+  background: var(--acento);
+  border-radius: 50%;
+  animation: rebote 1.2s infinite;
+}
+.puntos span:nth-child(2) {
+  animation-delay: 0.2s;
+}
+.puntos span:nth-child(3) {
+  animation-delay: 0.4s;
+}
+@keyframes rebote {
+  0%,
+  60%,
+  100% {
+    transform: translateY(0);
+    opacity: 0.5;
+  }
+  30% {
+    transform: translateY(-6px);
+    opacity: 1;
+  }
+}
+
+/* ---------- Elección (aprobar plan, confirmar comando) ---------- */
+#eleccion {
+  margin: 0 28px 10px;
+  background: var(--panel);
+  border: 1px solid var(--acento);
+  border-radius: 12px;
+  padding: 14px 16px;
+}
+#eleccion.oculto {
+  display: none;
+}
+#eleccion .pregunta {
+  font-weight: 600;
+  margin-bottom: 6px;
+}
+#eleccion .detalle {
+  color: var(--tenue);
+  font-size: 0.85rem;
+  white-space: pre-wrap;
+  font-family: "Cascadia Code", "Consolas", monospace;
+  margin-bottom: 10px;
+  max-height: 180px;
+  overflow: auto;
+}
+#eleccion .opciones {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+#eleccion button {
+  background: var(--acento);
+  color: #fff;
+  border: none;
+  border-radius: 9px;
+  padding: 9px 16px;
+  font-size: 0.9rem;
+  cursor: pointer;
+}
+#eleccion button.secundario {
+  background: transparent;
+  border: 1px solid var(--borde);
+  color: var(--texto);
+}
+#eleccion button:hover {
+  filter: brightness(1.1);
+}
+
+/* ---------- Barra de entrada ---------- */
+#barra-entrada {
+  display: flex;
+  gap: 10px;
+  align-items: flex-end;
+  padding: 14px 28px;
+  border-top: 1px solid var(--borde);
+  background: var(--fondo-2);
+}
+#entrada {
+  flex: 1;
+  resize: none;
+  max-height: 160px;
+  background: var(--panel);
+  color: var(--texto);
+  border: 1px solid var(--borde);
+  border-radius: 12px;
+  padding: 12px 14px;
+  font-family: inherit;
+  font-size: 0.95rem;
+  line-height: 1.4;
+}
+#entrada:focus {
+  outline: none;
+  border-color: var(--acento);
+}
+#entrada:disabled {
+  opacity: 0.5;
+}
+#enviar {
+  background: var(--acento);
+  color: #fff;
+  border: none;
+  border-radius: 12px;
+  width: 48px;
+  height: 46px;
+  font-size: 1.1rem;
+  cursor: pointer;
+}
+#enviar:hover {
+  filter: brightness(1.1);
+}
+
+#barra-estado {
+  display: flex;
+  gap: 18px;
+  padding: 6px 28px;
+  background: var(--fondo);
+  border-top: 1px solid var(--borde);
+  color: var(--tenue);
+  font-size: 0.78rem;
+}
+#e-modo {
+  color: var(--acento-2);
+}

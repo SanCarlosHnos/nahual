@@ -1,6 +1,6 @@
 # Nahual
 
-Asistente de programación **local** de terminal que habla español latinoamericano, construye software completo y **se mejora a sí mismo** de forma segura. Usa modelos locales de Ollama; nada sale de tu computadora.
+Asistente de programación **local con ventana gráfica** que habla español latinoamericano, construye software completo y **se mejora a sí mismo** de forma segura. Tiene un avatar animado que reacciona mientras trabaja. Usa modelos locales de Ollama; nada sale de tu computadora.
 
 El nombre viene del nahual mesoamericano, el ser que se transforma: igual que él, Nahual evoluciona con cada petición tuya.
 

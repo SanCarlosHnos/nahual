@@ -35,6 +35,9 @@ try {
   Write-Host 'Instalando dependencias...' -ForegroundColor Cyan
   npm ci --silent --no-audit --no-fund
   if ($LASTEXITCODE -ne 0) { throw 'Falló npm ci.' }
+  Write-Host 'Preparando la ventana (Electron)...' -ForegroundColor Cyan
+  # Asegura que el binario de Electron esté descargado (por si npm omitió su script de instalación).
+  & (Get-Command node).Source -e "require('electron')" 2>&1 | Out-Null
   Write-Host 'Registrando el comando "nahual"...' -ForegroundColor Cyan
   npm link --silent --no-audit --no-fund
   if ($LASTEXITCODE -ne 0) { throw 'Falló npm link.' }
@@ -75,7 +78,8 @@ foreach ($lnk in @(
   $s.Arguments = "/c `"title Nahual && `"$node`" `"$supervisor`" || pause`""
   $s.WorkingDirectory = $proyectos
   $s.IconLocation = "$node,0"
-  $s.Description = 'Nahual: IA local que construye software y se mejora a sí misma'
+  $s.WindowStyle = 7  # la consola del supervisor arranca minimizada; la ventana de Nahual se abre aparte
+  $s.Description = 'Nahual: IA local con ventana gráfica que construye software y se mejora a sí misma'
   $s.Save()
 }
 

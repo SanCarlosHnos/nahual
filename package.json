@@ -1,9 +1,10 @@
 {
   "name": "nahual",
-  "version": "0.3.0",
-  "description": "Nahual: IA local de terminal que construye software y se mejora a sí misma",
+  "version": "0.4.0",
+  "description": "Nahual: IA local con ventana gráfica que construye software y se mejora a sí misma",
   "type": "module",
   "private": true,
+  "main": "electron/main.mjs",
   "bin": {
     "nahual": "supervisor.mjs"
   },
@@ -14,14 +15,11 @@
     "verificar": "node nucleo/verificar.mjs ."
   },
   "dependencies": {
-    "ink": "^8.0.0",
-    "ink-text-input": "^6.0.0",
-    "react": "^19.3.1",
     "tsx": "^4.23.15"
   },
   "devDependencies": {
     "@types/node": "^26.6.6",
-    "@types/react": "^19.3.0",
+    "electron": "^45.2.3",
     "typescript": "^7.0.2"
   }
 }

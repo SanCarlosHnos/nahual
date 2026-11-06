@@ -112,6 +112,22 @@ async function pruebasDeExtremoAExtremo(dir) {
   return { ok: fallos.length === 0, salida: fallos.join('\n\n') };
 }
 
+function sintaxisVentana(dir) {
+  const archivos = [
+    join(dir, 'electron', 'main.mjs'),
+    join(dir, 'electron', 'preload.mjs'),
+    join(dir, 'electron', 'ui', 'app.js'),
+    join(dir, 'nucleo', 'correr-mejora.mjs'),
+  ];
+  for (const archivo of archivos) {
+    if (!existsSync(archivo)) return { ok: false, salida: `Falta un archivo de la ventana: ${archivo}` };
+    const r = ejecutar(['--check', archivo], dir, 30000);
+    if (!r.ok) return { ok: false, salida: `Error de sintaxis en ${archivo}:\n${r.salida}` };
+  }
+  if (!existsSync(join(dir, 'electron', 'ui', 'index.html'))) return { ok: false, salida: 'Falta electron/ui/index.html' };
+  return { ok: true, salida: '' };
+}
+
 export async function verificar(dir, log = console.log) {
   dir = resolve(dir);
   const pasos = [
@@ -119,6 +135,7 @@ export async function verificar(dir, log = console.log) {
     ['autopruebas (src/autopruebas.ts)', () => ejecutar([TSX, join(dir, 'src', 'autopruebas.ts')], dir)],
     ['arranque de la interfaz', () => ejecutar([TSX, join(dir, 'src', 'principal.ts'), '--check'], dir, 60000)],
     ['arranque del mejorador', () => ejecutar([TSX, join(dir, 'src', 'mejorador.ts'), '--check'], dir, 60000)],
+    ['sintaxis de la ventana (Electron)', () => sintaxisVentana(dir)],
     ['pruebas de extremo a extremo (Ollama simulado)', () => pruebasDeExtremoAExtremo(dir)],
   ];
   for (const [nombre, paso] of pasos) {

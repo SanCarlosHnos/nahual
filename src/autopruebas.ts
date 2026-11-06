@@ -11,6 +11,7 @@ import { interpretarClasificacion } from './intencion';
 import { textoModelfile } from './modelo';
 import { analizarAcciones, describirAccion, extraerTexto } from './protocolo';
 import { aplicarEdicion, rutaSegura } from './herramientas';
+import { crearInterfazGrafica, PREFIJO } from './interfaz/grafica';
 import { PROTEGIDOS, RAIZ } from './rutas';
 
 let fallos = 0;
@@ -112,6 +113,8 @@ const nombres = comandos.map((x) => x.nombre);
 comprobar('comandos con nombre único', new Set(nombres).size === nombres.length);
 comprobar('existen los comandos clave', ['ayuda', 'mejorar', 'deshacer', 'salir', 'equipo'].every((n) => nombres.includes(n)));
 comprobar('núcleo y supervisor protegidos', PROTEGIDOS.includes('nucleo') && PROTEGIDOS.includes('supervisor.mjs'));
+comprobar('proceso de Electron protegido', PROTEGIDOS.includes('electron/main.mjs') && PROTEGIDOS.includes('electron/preload.mjs'));
+comprobar('interfaz gráfica exportada', typeof crearInterfazGrafica === 'function' && PREFIJO.length > 0);
 comprobar('resumen de equipo sin datos no truena', typeof resumenEquipo(null) === 'string');
 
 // Regla crítica: ningún archivo de src contiene etiquetas de cierre literales

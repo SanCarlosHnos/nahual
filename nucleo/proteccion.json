@@ -2,6 +2,8 @@
   "protegidos": [
     "supervisor.mjs",
     "nucleo",
+    "electron/main.mjs",
+    "electron/preload.mjs",
     "instalar.ps1",
     "desinstalar.ps1",
     "package.json",
