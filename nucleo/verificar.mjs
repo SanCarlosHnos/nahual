@@ -117,6 +117,7 @@ function sintaxisVentana(dir) {
     join(dir, 'electron', 'main.mjs'),
     join(dir, 'electron', 'preload.mjs'),
     join(dir, 'electron', 'ui', 'app.js'),
+    join(dir, 'electron', 'ui', 'avatar3d.js'),
     join(dir, 'nucleo', 'correr-mejora.mjs'),
   ];
   for (const archivo of archivos) {
@@ -124,7 +125,9 @@ function sintaxisVentana(dir) {
     const r = ejecutar(['--check', archivo], dir, 30000);
     if (!r.ok) return { ok: false, salida: `Error de sintaxis en ${archivo}:\n${r.salida}` };
   }
-  if (!existsSync(join(dir, 'electron', 'ui', 'index.html'))) return { ok: false, salida: 'Falta electron/ui/index.html' };
+  for (const necesario of ['index.html', 'styles.css', join('vendor', 'three.module.js'), join('vendor', 'three.core.js')]) {
+    if (!existsSync(join(dir, 'electron', 'ui', necesario))) return { ok: false, salida: `Falta electron/ui/${necesario}` };
+  }
   return { ok: true, salida: '' };
 }
 

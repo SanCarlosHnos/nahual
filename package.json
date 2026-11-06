@@ -1,7 +1,7 @@
 {
   "name": "nahual",
-  "version": "0.4.0",
-  "description": "Nahual: IA local con ventana gráfica que construye software y se mejora a sí misma",
+  "version": "0.5.0",
+  "description": "Nahual: IA local con ventana gráfica y avatar 3D que construye software y se mejora a sí misma",
   "type": "module",
   "private": true,
   "main": "electron/main.mjs",

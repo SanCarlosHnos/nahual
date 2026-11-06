@@ -49,13 +49,14 @@ body {
 }
 
 #avatar {
-  width: 240px;
-  height: 260px;
+  width: 260px;
+  height: 280px;
 }
+#avatar canvas,
 #avatar svg {
   width: 100%;
   height: 100%;
-  overflow: visible;
+  display: block;
 }
 
 #nombre-avatar {
