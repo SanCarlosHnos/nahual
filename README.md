@@ -1,5 +1,8 @@
 # Nahual
 
+![CI/CD Pipeline](https://github.com/SanCarlosHnos/nahual/actions/workflows/ci-cd.yml/badge.svg)
+![Release](https://github.com/SanCarlosHnos/nahual/actions/workflows/release.yml/badge.svg)
+
 Asistente de programación **local con ventana gráfica** que habla español latinoamericano, construye software completo y **se mejora a sí mismo** de forma segura. Tiene un avatar animado que reacciona mientras trabaja. Usa modelos locales de Ollama; nada sale de tu computadora.
 
 El nombre viene del nahual mesoamericano, el ser que se transforma: igual que él, Nahual evoluciona con cada petición tuya.
@@ -49,6 +52,49 @@ nahual --rescate
 ```
 
 `--deshacer` revierte la última mejora; `--rescate` vuelve a la versión de fábrica.
+
+## Desarrollo y CI/CD
+
+El proyecto usa **GitHub Actions** para integración y despliegue continuo:
+
+### Pipeline de CI/CD
+
+Cada push y pull request a las ramas `master` o `main` ejecuta automáticamente:
+
+1. **Tests en múltiples versiones de Node.js** (20.x, 22.x, 24.x)
+2. **Verificación de compilación TypeScript** estricta
+3. **Tests unitarios** con Vitest (66 tests)
+4. **Verificación completa** del sistema (autopruebas, interfaz, Electron)
+5. **Análisis de calidad de código** con Prettier
+
+### Workflows
+
+- **CI/CD Pipeline** (`ci-cd.yml`): Se ejecuta en cada push/PR
+- **Release** (`release.yml`): Crea releases automáticos cuando se pushea un tag `v*.*.*`
+
+### Tests locales
+
+Antes de hacer push, verifica que todo funcione:
+
+```bash
+npm test              # Tests unitarios
+npm run verificar     # Verificación completa
+npm run check         # Compilación TypeScript
+```
+
+### Crear un release
+
+Para crear una nueva versión:
+
+```bash
+git tag v0.6.0
+git push origin v0.6.0
+```
+
+Esto automáticamente:
+- Ejecuta todos los tests
+- Crea un release en GitHub con notas
+- Adjunta artefactos de build
 
 ## Desinstalar
 
