@@ -2,6 +2,7 @@
   "name": "nahual",
   "version": "0.5.0",
   "description": "Nahual: IA local con ventana gráfica y avatar 3D que construye software y se mejora a sí misma",
+  "author": "SanCarlosHnos",
   "type": "module",
   "private": true,
   "main": "electron/main.mjs",
@@ -62,8 +63,12 @@
       "!tests/**"
     ],
     "win": {
-      "target": "portable",
-      "arch": ["x64"]
+      "target": [
+        {
+          "target": "portable",
+          "arch": ["x64"]
+        }
+      ]
     },
     "portable": {
       "artifactName": "Nahual-Portable-${version}.exe"
