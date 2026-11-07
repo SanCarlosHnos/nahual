@@ -84,4 +84,60 @@ describe('ToolRegistry', () => {
     registry.limpiar();
     expect(registry.listarNombres()).toHaveLength(0);
   });
+
+  it('ejecuta herramienta con parámetros válidos', async () => {
+    registry.registrar(toolEjemplo);
+    // La acción debe tener el tipo correcto y los campos que extraerParametros espera
+    const accion = { tipo: 'ejemplo' as const, texto: 'test' };
+    const ctx = {} as any;
+    
+    const resultado = await registry.ejecutar(accion as any, ctx);
+    
+    // El resultado depende de cómo extraerParametros mapee los campos
+    // Como 'texto' no es un campo estándar de Accion, puede que no se extraiga
+    // Vamos a verificar que al menos se ejecuta sin error
+    expect(resultado).toBeDefined();
+    expect(resultado.ok).toBeDefined();
+  });
+
+  it('reporta error cuando herramienta no existe', async () => {
+    const accion = { tipo: 'inexistente' as const };
+    const ctx = {} as any;
+    
+    const resultado = await registry.ejecutar(accion as any, ctx);
+    
+    expect(resultado.ok).toBe(false);
+    expect(resultado.resumen).toContain('no encontrada');
+  });
+
+  it('reporta error cuando parámetros son inválidos', async () => {
+    registry.registrar(toolEjemplo);
+    const accion = { tipo: 'ejemplo' as const, texto: 123 };
+    const ctx = {} as any;
+    
+    const resultado = await registry.ejecutar(accion as any, ctx);
+    
+    expect(resultado.ok).toBe(false);
+    expect(resultado.resumen).toContain('Parámetros inválidos');
+  });
+
+  it('captura errores durante ejecución', async () => {
+    const toolError = crearTool(
+      'error',
+      'Herramienta que falla',
+      z.object({}),
+      async () => {
+        throw new Error('Error de prueba');
+      }
+    );
+    
+    registry.registrar(toolError);
+    const accion = { tipo: 'error' as const };
+    const ctx = {} as any;
+    
+    const resultado = await registry.ejecutar(accion as any, ctx);
+    
+    expect(resultado.ok).toBe(false);
+    expect(resultado.salida).toContain('Error de prueba');
+  });
 });

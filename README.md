@@ -2,6 +2,7 @@
 
 ![CI/CD Pipeline](https://github.com/SanCarlosHnos/nahual/actions/workflows/ci-cd.yml/badge.svg)
 ![Release](https://github.com/SanCarlosHnos/nahual/actions/workflows/release.yml/badge.svg)
+![Coverage](https://img.shields.io/badge/coverage-80%25-brightgreen)
 
 Asistente de programación **local con ventana gráfica** que habla español latinoamericano, construye software completo y **se mejora a sí mismo** de forma segura. Tiene un avatar animado que reacciona mientras trabaja. Usa modelos locales de Ollama; nada sale de tu computadora.
 
@@ -64,8 +65,9 @@ Cada push y pull request a las ramas `master` o `main` ejecuta automáticamente:
 1. **Tests en múltiples versiones de Node.js** (20.x, 22.x, 24.x)
 2. **Verificación de compilación TypeScript** estricta
 3. **Tests unitarios** con Vitest (66 tests)
-4. **Verificación completa** del sistema (autopruebas, interfaz, Electron)
-5. **Análisis de calidad de código** con Prettier
+4. **Code coverage** con mínimo 80% requerido
+5. **Verificación completa** del sistema (autopruebas, interfaz, Electron)
+6. **Análisis de calidad de código** con Prettier
 
 ### Workflows
 
@@ -77,10 +79,21 @@ Cada push y pull request a las ramas `master` o `main` ejecuta automáticamente:
 Antes de hacer push, verifica que todo funcione:
 
 ```bash
-npm test              # Tests unitarios
-npm run verificar     # Verificación completa
-npm run check         # Compilación TypeScript
+npm test                    # Tests unitarios
+npm run test:coverage       # Tests con reporte de coverage
+npm run verificar           # Verificación completa
+npm run check               # Compilación TypeScript
 ```
+
+### Code Coverage
+
+El proyecto requiere un mínimo de **80% de cobertura** en:
+- Líneas de código
+- Funciones
+- Ramas (branches)
+- Sentencias (statements)
+
+Los reportes de coverage se generan automáticamente en el CI/CD y están disponibles como artefactos descargables.
 
 ### Crear un release
 

@@ -3,3 +3,4 @@ proyectos/
 .taller/
 config.json
 *.log
+coverage/
