@@ -11,15 +11,19 @@
   "scripts": {
     "start": "node supervisor.mjs",
     "check": "tsc --noEmit",
+    "test": "vitest run",
+    "test:watch": "vitest",
     "autopruebas": "tsx src/autopruebas.ts",
     "verificar": "node nucleo/verificar.mjs ."
   },
   "dependencies": {
-    "tsx": "^4.23.15"
+    "tsx": "^4.23.15",
+    "zod": "^4.6.7"
   },
   "devDependencies": {
     "@types/node": "^26.6.6",
     "electron": "^45.2.3",
-    "typescript": "^7.0.2"
+    "typescript": "^7.0.2",
+    "vitest": "^5.1.0"
   }
 }

@@ -1,11 +1,16 @@
 import type { Config } from './config';
-import { ejecutarAccion, type ContextoHerramientas } from './herramientas';
+import { type ContextoHerramientas } from './herramientas';
+import { crearRegistryEstandar } from './herramientas/index';
 import { revisarIdioma } from './idioma';
 import { ejemploDeTrabajo } from './indicaciones';
 import type { PasoPlan } from './interfaz/tipos';
 import { guardarExperiencia, recordar } from './memoria';
 import { conversar, type Mensaje } from './ollama';
-import { analizarAcciones, describirAccion, extraerTexto, huellaAcciones } from './protocolo';
+import { analizarAcciones, describirAccion, extraerTexto } from './protocolo';
+import { ConversationManager } from './servicios/conversation-manager';
+import { ContextPruner } from './servicios/context-pruner';
+import { LoopDetector } from './servicios/loop-detector';
+import type { ToolRegistry } from './servicios/tool-registry';
 
 export interface ResultadoAgente {
   terminado: boolean;
@@ -19,30 +24,17 @@ export interface OpcionesEjecucion {
   pararEnPlan?: boolean;
 }
 
-const RESULTADOS_VIEJOS = '[resultados antiguos omitidos para ahorrar memoria]';
 const CUERPO_ACCION =
   /(<(?:escribir|write|editar|edit)\s+(?:ruta|path)=["'][^"']*["']\s*>?)[\s\S]*?(<\/(?:escribir|write|editar|edit)>)/g;
 const MAX_TEXTO_SIN_ACCION = 1500;
-/** Vueltas sin progreso que se comparan: así también se ven los bucles que alternan dos acciones. */
-const VENTANA_HUELLAS = 6;
-const REPETICIONES_PARA_ATASCO = 3;
-
-/** De los resultados viejos conserva qué se hizo y si falló, y descarta el cuerpo. */
-function resumirResultados(contenido: string): string {
-  const encabezados = contenido
-    .split('\n')
-    .filter((linea) => linea.startsWith('### '))
-    .map((linea) => (linea.length > 120 ? `${linea.slice(0, 120)}…` : linea));
-  return encabezados.length
-    ? `RESULTADOS (resumen de lo ya hecho):\n\n${encabezados.join('\n')}\n[cuerpo omitido para ahorrar memoria]`
-    : RESULTADOS_VIEJOS;
-}
 
 /** Agente que conversa con el modelo y ejecuta sus acciones en bucle, con controles contra la divagación. */
 export class Agente {
-  readonly mensajes: Mensaje[];
+  private readonly conversacion: ConversationManager;
+  private readonly detectorBucles: LoopDetector;
+  private readonly podadorContexto: ContextPruner;
+  private readonly registry: ToolRegistry;
   plan: PasoPlan[] = [];
-  private readonly inicio: number;
 
   constructor(
     private readonly cfg: Config,
@@ -50,19 +42,26 @@ export class Agente {
     readonly ctx: ContextoHerramientas,
     private readonly modo: 'tarea' | 'mejora',
   ) {
-    this.mensajes = [{ role: 'system', content: indicaciones }, ...ejemploDeTrabajo()];
-    this.inicio = this.mensajes.length;
+    this.conversacion = new ConversationManager(indicaciones, ejemploDeTrabajo());
+    this.detectorBucles = new LoopDetector();
+    this.podadorContexto = new ContextPruner();
+    this.registry = crearRegistryEstandar();
+  }
+
+  /** Acceso de solo lectura al historial de mensajes (para compatibilidad y debugging). */
+  get mensajes(): Mensaje[] {
+    return this.conversacion.obtenerHistorial();
   }
 
   async ejecutar(mensajeUsuario: string, op: OpcionesEjecucion = {}): Promise<ResultadoAgente> {
     const { senal } = op;
     const ui = this.ctx.ui;
-    this.mensajes.push({ role: 'user', content: mensajeUsuario });
+    this.conversacion.agregar({ role: 'user', content: mensajeUsuario });
     let empujones = 0;
     let correccionesIdioma = 0;
     let atascos = 0;
     let reintentar = false;
-    const huellas: string[] = [];
+    this.detectorBucles.reiniciar();
 
     for (let paso = 1; paso <= this.cfg.maxPasos; paso++) {
       if (senal?.aborted) return this.interrumpido();
@@ -72,7 +71,7 @@ export class Agente {
       ui.emitir({ tipo: 'pensando', activo: true, etiqueta: paso === 1 ? 'Pensando' : 'Trabajando' });
       let respuesta: string;
       try {
-        respuesta = await conversar(this.cfg, this.mensajes, {
+        respuesta = await conversar(this.cfg, this.conversacion.obtenerHistorial(), {
           senal,
           // Con la misma temperatura el modelo vuelve a elegir la salida que ya falló.
           temperatura: reintentar ? Math.min(0.9, this.cfg.temperatura + 0.3) : this.cfg.temperatura,
@@ -83,7 +82,7 @@ export class Agente {
       } finally {
         ui.emitir({ tipo: 'pensando', activo: false });
       }
-      this.mensajes.push({ role: 'assistant', content: respuesta });
+      this.conversacion.agregar({ role: 'assistant', content: respuesta });
       reintentar = false;
 
       const acciones = analizarAcciones(respuesta);
@@ -95,7 +94,7 @@ export class Agente {
         if (!idioma.ok && correccionesIdioma < 2) {
           correccionesIdioma++;
           reintentar = true;
-          this.mensajes.push({
+          this.conversacion.agregar({
             role: 'user',
             content: `Tu respuesta no cumple la regla de idioma: ${idioma.motivo}. Reescríbela completa, solo en español latinoamericano.`,
           });
@@ -105,7 +104,7 @@ export class Agente {
           empujones++;
           reintentar = true;
           if (texto) ui.emitir({ tipo: 'info', texto });
-          this.mensajes.push({
+          this.conversacion.agregar({
             role: 'user',
             content:
               texto.length > MAX_TEXTO_SIN_ACCION
@@ -169,7 +168,7 @@ export class Agente {
         }
         const d = describirAccion(accion);
         ui.emitir({ tipo: 'accion', nombre: d.nombre, detalle: d.detalle });
-        const r = await ejecutarAccion(accion, this.ctx, senal);
+        const r = await this.registry.ejecutar(accion, this.ctx, senal);
         ui.emitir({ tipo: 'resultado', ok: r.ok, resumen: r.resumen, diferencias: r.diferencias });
         if (!r.ok) todoBien = false;
         else if (accion.tipo === 'escribir' || accion.tipo === 'editar') progreso = true;
@@ -177,7 +176,7 @@ export class Agente {
       }
 
       if (op.pararEnPlan && planNuevo) {
-        if (resultados.length) this.mensajes.push({ role: 'user', content: `RESULTADOS:\n\n${resultados.join('\n\n')}` });
+        if (resultados.length) this.conversacion.agregar({ role: 'user', content: `RESULTADOS:\n\n${resultados.join('\n\n')}` });
         return { terminado: true, resumen: texto, plan: this.plan };
       }
 
@@ -187,24 +186,25 @@ export class Agente {
         if (this.plan.length) ui.emitir({ tipo: 'plan', pasos: this.plan, fijo: true });
         const plan = this.plan;
         this.plan = [];
-        guardarExperiencia(this.modo, [this.mensajes[0]!, ...this.mensajes.slice(this.inicio)]);
+        guardarExperiencia(this.modo, [
+          this.conversacion.obtener(0)!,
+          ...this.conversacion.mensajesRecientes(),
+        ]);
         return { terminado: true, resumen: resumenFinal, plan };
       }
 
       // Detección de bucles con los resultados ya en la mano: solo cuentan las vueltas que
       // no cambiaron nada, y se comparan dentro de una ventana para ver también los ciclos
       // que alternan dos acciones (leer → editar fallido → leer…).
-      const huella = huellaAcciones(acciones);
-      if (progreso || planNuevo) huellas.length = 0;
-      else {
-        huellas.push(huella);
-        if (huellas.length > VENTANA_HUELLAS) huellas.shift();
+      if (progreso || planNuevo) {
+        this.detectorBucles.reiniciar();
+      } else {
+        this.detectorBucles.registrar(acciones);
       }
-      const atasco =
-        !progreso && !planNuevo && huellas.filter((h) => h === huella).length >= REPETICIONES_PARA_ATASCO;
+      const atasco = !progreso && !planNuevo && this.detectorBucles.detectarAtasco();
       if (atasco) {
         atascos++;
-        huellas.length = 0;
+        this.detectorBucles.reiniciar();
         if (atascos >= 3) {
           return { terminado: false, resumen: 'Me quedé repitiendo lo mismo sin avanzar. Dime cómo prefieres que lo resuelva.', plan: this.plan };
         }
@@ -224,7 +224,7 @@ export class Agente {
       if (!todoBien) reintentar = true;
       // Los RESULTADOS se entregan siempre, también en el turno atascado: sin el error a la
       // vista el modelo no recibe ninguna información nueva con la que cambiar de estrategia.
-      this.mensajes.push({
+      this.conversacion.agregar({
         role: 'user',
         content: `RESULTADOS:\n\n${resultados.join('\n\n') || '(sin resultados)'}\n\n${indicacion}${notas}`,
       });
@@ -237,7 +237,7 @@ export class Agente {
   }
 
   private informarContexto(): void {
-    const caracteres = this.mensajes.reduce((n, m) => n + m.content.length, 0);
+    const caracteres = this.conversacion.tamano();
     const porcentaje = Math.min(100, Math.round((caracteres / 3 / this.cfg.contexto) * 100));
     this.ctx.ui.emitir({ tipo: 'estado', contexto: porcentaje });
   }
@@ -245,19 +245,25 @@ export class Agente {
   /** Recorta mensajes antiguos para que la conversación quepa en el contexto del modelo. */
   private podar(): void {
     const presupuesto = this.cfg.contexto * 3; // ~3 caracteres por token
-    const tamano = (): number => this.mensajes.reduce((n, m) => n + m.content.length, 0);
     const recientes = 4;
-    for (let i = this.inicio + 1; i < this.mensajes.length - recientes && tamano() > presupuesto; i++) {
-      const m = this.mensajes[i]!;
-      if (m.role === 'user' && m.content.startsWith('RESULTADOS:')) m.content = resumirResultados(m.content);
-      else if (m.role === 'assistant')
-        m.content = m.content.replace(CUERPO_ACCION, '$1\n[cuerpo omitido para ahorrar memoria]\n$2');
+    this.podadorContexto.podar(this.conversacion, presupuesto, recientes);
+
+    // Podar acciones adicionales específicas de Agente (cuerpo de etiquetas escribir/editar)
+    const historial = this.conversacion.obtenerHistorial();
+    const inicio = this.conversacion.obtenerInicio();
+    for (let i = inicio + 1; i < historial.length - recientes && this.conversacion.tamano() > presupuesto; i++) {
+      const m = historial[i]!;
+      if (m.role === 'assistant') {
+        const nuevo = m.content.replace(CUERPO_ACCION, '$1\n[cuerpo omitido para ahorrar memoria]\n$2');
+        this.conversacion.modificar(i, nuevo);
+      }
     }
+
     // Si resumir no alcanza, se descartan los turnos más viejos. Nunca se deja que Ollama
     // recorte el inicio de la conversación: ahí van las indicaciones y el protocolo, y sin
     // ellos el modelo deja de escribir acciones válidas y se queda repitiendo texto.
-    while (this.mensajes.length - recientes > this.inicio + 1 && tamano() > presupuesto) {
-      this.mensajes.splice(this.inicio + 1, 1);
+    while (this.conversacion.longitud() - recientes > inicio + 1 && this.conversacion.tamano() > presupuesto) {
+      this.conversacion.eliminarEn(inicio + 1);
     }
   }
 
@@ -267,9 +273,11 @@ export class Agente {
    * ejemplo de trabajo, pero elimina los mensajes de intentos previos.
    */
   limpiarContextoCorrecciones(): void {
-    // Mantener solo el system prompt (índice 0) y el ejemplo de trabajo (índices 1 a this.inicio-1)
+    // Mantener solo el system prompt (índice 0) y el ejemplo de trabajo
     // Eliminar todo lo demás
-    this.mensajes.length = this.inicio;
+    const inicio = this.conversacion.obtenerInicio();
+    this.conversacion.limpiarHasta(inicio);
     this.plan = [];
+    this.detectorBucles.reiniciar();
   }
 }
