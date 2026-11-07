@@ -1,6 +1,6 @@
 {
   "name": "nahual",
-  "version": "0.7.5",
+  "version": "0.7.8",
   "description": "Nahual: IA local con ventana gráfica y avatar 3D que construye software y se mejora a sí misma",
   "author": "SanCarlosHnos",
   "type": "module",
@@ -66,7 +66,9 @@
       "target": [
         {
           "target": "portable",
-          "arch": ["x64"]
+          "arch": [
+            "x64"
+          ]
         }
       ]
     },
