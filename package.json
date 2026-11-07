@@ -20,8 +20,8 @@
     "format:check": "prettier --check \"src/**/*.ts\" \"tests/**/*.ts\"",
     "autopruebas": "tsx src/autopruebas.ts",
     "verificar": "node nucleo/verificar.mjs .",
-    "build": "electron-builder --win --x64",
-    "build:portable": "electron-builder --win portable"
+    "build": "electron-builder --win portable",
+    "build:installer": "electron-builder --win nsis"
   },
   "dependencies": {
     "tsx": "^4.23.15",
@@ -48,8 +48,7 @@
     "appId": "com.nahual.app",
     "productName": "Nahual",
     "directories": {
-      "output": "dist",
-      "buildResources": "build"
+      "output": "dist"
     },
     "files": [
       "electron/**/*",
@@ -57,33 +56,17 @@
       "nucleo/**/*",
       "supervisor.mjs",
       "package.json",
-      "node_modules/**/*"
+      "node_modules/**/*",
+      "!dist/**",
+      "!coverage/**",
+      "!tests/**"
     ],
     "win": {
-      "target": [
-        {
-          "target": "nsis",
-          "arch": ["x64"]
-        },
-        {
-          "target": "portable",
-          "arch": ["x64"]
-        }
-      ]
-    },
-    "nsis": {
-      "oneClick": false,
-      "perMachine": true,
-      "allowToChangeInstallationDirectory": true,
-      "createDesktopShortcut": true,
-      "createStartMenuShortcut": true
+      "target": "portable",
+      "arch": ["x64"]
     },
     "portable": {
       "artifactName": "Nahual-Portable-${version}.exe"
-    },
-    "publish": {
-      "provider": "github",
-      "releaseType": "release"
     }
   }
 }
