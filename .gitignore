@@ -4,3 +4,5 @@ proyectos/
 config.json
 *.log
 coverage/
+dist/
+build/

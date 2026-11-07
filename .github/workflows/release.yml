@@ -10,7 +10,7 @@ permissions:
 
 jobs:
   release:
-    name: Create Release
+    name: Build & Release
     runs-on: windows-latest
     
     steps:
@@ -38,13 +38,15 @@ jobs:
       id: get_version
       run: echo "VERSION=${GITHUB_REF#refs/tags/}" >> $GITHUB_OUTPUT
     
-    - name: Create Release
-      uses: actions/create-release@v1
+    - name: Build Electron app
+      run: npm run build
       env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+    
+    - name: Create Release and Upload Assets
+      uses: softprops/action-gh-release@v2
       with:
-        tag_name: ${{ github.ref }}
-        release_name: Nahual ${{ steps.get_version.outputs.VERSION }}
+        name: Nahual ${{ steps.get_version.outputs.VERSION }}
         body: |
           ## Cambios en esta versión
           
@@ -52,6 +54,13 @@ jobs:
           
           ## Instalación
           
+          ### Opción 1: Instalador (recomendado)
+          Descarga `Nahual-Setup-${{ steps.get_version.outputs.VERSION }}.exe` y ejecútalo.
+          
+          ### Opción 2: Portable
+          Descarga `Nahual-Portable-${{ steps.get_version.outputs.VERSION }}.exe` y ejecútalo directamente.
+          
+          ### Opción 3: Desde código fuente
           ```bash
           git clone https://github.com/${{ github.repository }}.git
           cd nahual
@@ -61,7 +70,13 @@ jobs:
           
           ## Requisitos
           
-          - Node.js 20.x o superior
+          - Windows 10/11 (64-bit)
           - Ollama corriendo localmente
         draft: false
         prerelease: false
+        files: |
+          dist/*.exe
+          dist/*.zip
+          dist/*.msi
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
