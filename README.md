@@ -64,10 +64,10 @@ Cada push y pull request a las ramas `master` o `main` ejecuta automáticamente:
 
 1. **Tests en múltiples versiones de Node.js** (20.x, 22.x, 24.x)
 2. **Verificación de compilación TypeScript** estricta
-3. **Tests unitarios** con Vitest (66 tests)
+3. **Tests unitarios** con Vitest (76 tests)
 4. **Code coverage** con mínimo 80% requerido
 5. **Verificación completa** del sistema (autopruebas, interfaz, Electron)
-6. **Análisis de calidad de código** con Prettier
+6. **Análisis de calidad de código** con ESLint y Prettier
 
 ### Workflows
 
@@ -83,7 +83,28 @@ npm test                    # Tests unitarios
 npm run test:coverage       # Tests con reporte de coverage
 npm run verificar           # Verificación completa
 npm run check               # Compilación TypeScript
+npm run lint                # Análisis de calidad con ESLint
+npm run lint:fix            # Corregir problemas de lint automáticamente
+npm run format              # Formatear código con Prettier
+npm run format:check        # Verificar que el código está formateado
 ```
+
+### Calidad de código
+
+El proyecto usa **ESLint** y **Prettier** para mantener la calidad y consistencia del código:
+
+- **ESLint 10** con configuración flat (`eslint.config.js`)
+- **Prettier 3.9** para formateo automático (`.prettierrc`)
+- Integración completa: los problemas de formato se reportan como errores de lint
+- Compatible con TypeScript 7.0 usando `@babel/eslint-parser`
+
+La configuración de Prettier:
+- Comillas simples, punto y coma, tabulación de 2 espacios
+- Líneas de máximo 100 caracteres
+- Comas al final (trailing commas)
+- Final de línea Unix (LF)
+
+El CI/CD verifica automáticamente que el código pase lint y format en cada push/PR.
 
 ### Code Coverage
 
