@@ -19,7 +19,10 @@ import { PROTEGIDOS, RAIZ } from './rutas';
 
 function verificar(dir: string, ui: Interfaz): { ok: boolean; informe: string } {
   ui.emitir({ tipo: 'info', texto: 'Verificando la copia del taller…' });
-  const r = spawnSync(process.execPath, [join(RAIZ, 'nucleo', 'verificar.mjs'), dir], { encoding: 'utf8', maxBuffer: 20 * 1024 * 1024 });
+  const r = spawnSync(process.execPath, [join(RAIZ, 'nucleo', 'verificar.mjs'), dir], {
+    encoding: 'utf8',
+    maxBuffer: 20 * 1024 * 1024,
+  });
   const informe = `${r.stdout ?? ''}${r.stderr ?? ''}`.trim();
   return { ok: r.status === 0, informe: recortar(informe, 6000) };
 }
@@ -40,7 +43,11 @@ async function main(): Promise<number> {
 
   const cfg = cargarConfig();
   const ui = await crearInterfaz([]);
-  const contexto = { equipo: resumenEquipo(cargarEquipo()), memoria: leerMemoria(), creativas: leerCapacidadesCreativas() };
+  const contexto = {
+    equipo: resumenEquipo(cargarEquipo()),
+    memoria: leerMemoria(),
+    creativas: leerCapacidadesCreativas(),
+  };
 
   const ctxHerramientas = {
     raiz: resolve(taller),
@@ -73,7 +80,11 @@ async function main(): Promise<number> {
     const aprobacionAutomatica = process.env.NAHUAL_APROBAR_PLAN === '1';
     const eleccion = aprobacionAutomatica
       ? 0
-      : await ui.elegir('¿Apruebo este plan y lo implemento?', ['Sí, adelante', 'No, cancelar'], agente.plan.map((p, i) => `${i + 1}. ${p.texto}`).join('\n'));
+      : await ui.elegir(
+          '¿Apruebo este plan y lo implemento?',
+          ['Sí, adelante', 'No, cancelar'],
+          agente.plan.map((p, i) => `${i + 1}. ${p.texto}`).join('\n'),
+        );
     if (eleccion !== 0) {
       ui.emitir({ tipo: 'info', texto: 'Mejora cancelada. No cambié nada.' });
       return 3;
@@ -81,7 +92,9 @@ async function main(): Promise<number> {
 
     // FASE 2: implementación (ya se permite escribir y ejecutar)
     ctxHerramientas.soloLectura = false;
-    let resultado = await agente.ejecutar('Plan aprobado. Impleméntalo paso por paso, marca cada paso con hecho y termina con terminar.');
+    let resultado = await agente.ejecutar(
+      'Plan aprobado. Impleméntalo paso por paso, marca cada paso con hecho y termina con terminar.',
+    );
 
     if (agente.ctx.cambiados.size === 0) {
       ui.emitir({ tipo: 'aviso', texto: 'No modifiqué ningún archivo.' });
@@ -91,10 +104,15 @@ async function main(): Promise<number> {
     // Verificación con intentos de corrección
     let revision = verificar(taller, ui);
     for (let intento = 1; !revision.ok && intento <= cfg.maxCorrecciones; intento++) {
-      ui.emitir({ tipo: 'aviso', texto: `La verificación falló (corrección ${intento}/${cfg.maxCorrecciones}).` });
+      ui.emitir({
+        tipo: 'aviso',
+        texto: `La verificación falló (corrección ${intento}/${cfg.maxCorrecciones}).`,
+      });
       // Limpiar el contexto de correcciones anteriores para evitar que el historial acumulado degrade la calidad
       agente.limpiarContextoCorrecciones();
-      resultado = await agente.ejecutar(`La verificación automática FALLÓ. Corrige el problema y vuelve a usar terminar.\n\n${revision.informe}`);
+      resultado = await agente.ejecutar(
+        `La verificación automática FALLÓ. Corrige el problema y vuelve a usar terminar.\n\n${revision.informe}`,
+      );
       revision = verificar(taller, ui);
     }
 
@@ -104,7 +122,8 @@ async function main(): Promise<number> {
     }
     ui.emitir({ tipo: 'exito', texto: 'La copia del taller pasó la verificación.' });
     // El resumen ya lo mostró el agente al terminar: repetirlo aquí llenaba la pantalla de duplicados.
-    if (!resultado.terminado && resultado.resumen) ui.emitir({ tipo: 'aviso', texto: resultado.resumen });
+    if (!resultado.terminado && resultado.resumen)
+      ui.emitir({ tipo: 'aviso', texto: resultado.resumen });
     return 0;
   } finally {
     ui.cerrar();

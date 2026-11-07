@@ -4,7 +4,11 @@ import { formatearEvento, formatearPlan, pintar } from './formato';
 import type { Evento, Interfaz } from './tipos';
 
 export function crearInterfazTexto(): Interfaz {
-  const rl = readline.createInterface({ input: process.stdin, output: process.stdout, terminal: !!process.stdin.isTTY });
+  const rl = readline.createInterface({
+    input: process.stdin,
+    output: process.stdout,
+    terminal: !!process.stdin.isTTY,
+  });
   const cola: string[] = [];
   let esperando: ((linea: string | null) => void) | null = null;
   let cerrada = false;
@@ -43,7 +47,8 @@ export function crearInterfazTexto(): Interfaz {
         return;
       }
       if (e.tipo === 'plan' && !e.fijo) {
-        if (e.pasos.every((p) => !p.hecho)) console.log('\n' + pintar('bold', '  Plan') + '\n' + formatearPlan(e.pasos));
+        if (e.pasos.every((p) => !p.hecho))
+          console.log('\n' + pintar('bold', '  Plan') + '\n' + formatearPlan(e.pasos));
         return;
       }
       const texto = formatearEvento(e);
@@ -56,7 +61,9 @@ export function crearInterfazTexto(): Interfaz {
       console.log('\n' + pintar(['bold', 'yellow'], pregunta));
       if (detalle) console.log(pintar('cyan', detalle));
       opciones.forEach((o, i) => console.log(`  ${i + 1}. ${o}`));
-      const respuesta = ((await pedirLinea(pintar('yellow', 'Elige un número › '))) ?? '').trim().toLowerCase();
+      const respuesta = ((await pedirLinea(pintar('yellow', 'Elige un número › '))) ?? '')
+        .trim()
+        .toLowerCase();
       const numero = Number(respuesta);
       if (numero >= 1 && numero <= opciones.length) return numero - 1;
       if (['s', 'si', 'sí'].includes(respuesta)) return 0;

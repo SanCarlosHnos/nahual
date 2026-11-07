@@ -73,7 +73,10 @@ export class ResponseValidator {
 
       // Validar que las acciones con ruta no estén vacías
       if (
-        (accion.tipo === 'leer' || accion.tipo === 'listar' || accion.tipo === 'escribir' || accion.tipo === 'editar') &&
+        (accion.tipo === 'leer' ||
+          accion.tipo === 'listar' ||
+          accion.tipo === 'escribir' ||
+          accion.tipo === 'editar') &&
         !accion.ruta
       ) {
         return {

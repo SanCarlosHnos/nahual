@@ -40,9 +40,37 @@ const ARCHIVO = join(DIR_DATOS, 'equipo.json');
 const VIGENCIA_MS = 24 * 60 * 60 * 1000;
 
 const HERRAMIENTAS = [
-  'node', 'npm', 'pnpm', 'yarn', 'bun', 'deno', 'git', 'gh', 'python', 'py', 'pip', 'dotnet', 'cargo', 'rustc',
-  'go', 'java', 'javac', 'docker', 'code', 'gcc', 'g++', 'clang', 'cmake', 'make', 'ollama', 'php', 'ruby',
-  'choco', 'winget', 'flutter', 'adb',
+  'node',
+  'npm',
+  'pnpm',
+  'yarn',
+  'bun',
+  'deno',
+  'git',
+  'gh',
+  'python',
+  'py',
+  'pip',
+  'dotnet',
+  'cargo',
+  'rustc',
+  'go',
+  'java',
+  'javac',
+  'docker',
+  'code',
+  'gcc',
+  'g++',
+  'clang',
+  'cmake',
+  'make',
+  'ollama',
+  'php',
+  'ruby',
+  'choco',
+  'winget',
+  'flutter',
+  'adb',
 ];
 
 const GUION = `
@@ -98,7 +126,11 @@ export function recolectarEquipo(): Promise<Inventario | null> {
   if (process.platform !== 'win32') return Promise.resolve(null);
   const codificado = Buffer.from(GUION, 'utf16le').toString('base64');
   return new Promise((resolver) => {
-    const hijo = spawn('powershell', ['-NoProfile', '-NonInteractive', '-EncodedCommand', codificado], { windowsHide: true });
+    const hijo = spawn(
+      'powershell',
+      ['-NoProfile', '-NonInteractive', '-EncodedCommand', codificado],
+      { windowsHide: true },
+    );
     let salida = '';
     hijo.stdout.on('data', (d: Buffer) => (salida += d.toString('utf8')));
     const reloj = setTimeout(() => hijo.kill(), 90000);
@@ -132,11 +164,16 @@ export function recolectarEquipo(): Promise<Inventario | null> {
 
 /** Resumen compacto del equipo para las indicaciones del modelo. */
 export function resumenEquipo(inventario: Inventario | null, modelos: string[] = []): string {
-  if (!inventario) return '## Tu equipo\n(Todavía no tengo el inventario de la computadora del usuario.)\n';
+  if (!inventario)
+    return '## Tu equipo\n(Todavía no tengo el inventario de la computadora del usuario.)\n';
   const herramientas = Object.entries(inventario.herramientas)
-    .map(([nombre, h]) => `${nombre} ${h.version.replace(/^[^\d]*/, '').split(' ')[0] || ''}`.trim())
+    .map(([nombre, h]) =>
+      `${nombre} ${h.version.replace(/^[^\d]*/, '').split(' ')[0] || ''}`.trim(),
+    )
     .join(', ');
-  const discos = inventario.discos.map((d) => `${d.unidad} ${d.libreGB} GB libres de ${d.totalGB} GB`).join('; ');
+  const discos = inventario.discos
+    .map((d) => `${d.unidad} ${d.libreGB} GB libres de ${d.totalGB} GB`)
+    .join('; ');
   const nombres = inventario.programas.map((p) => p.nombre);
   const muestra = nombres.slice(0, 80).join(', ');
   return `## Tu equipo (la computadora del usuario; actualizado el ${inventario.fecha.slice(0, 10)})
@@ -150,14 +187,29 @@ Para saber si hay un programa concreto usa la acción equipo con buscar.
 `;
 }
 
-export function buscarEnEquipo(inventario: Inventario, consulta: string): { texto: string; total: number } {
+export function buscarEnEquipo(
+  inventario: Inventario,
+  consulta: string,
+): { texto: string; total: number } {
   const q = consulta.trim().toLowerCase();
   if (!q) return { texto: resumenEquipo(inventario), total: 1 };
-  const programas = inventario.programas.filter((p) => `${p.nombre} ${p.editor}`.toLowerCase().includes(q));
-  const herramientas = Object.entries(inventario.herramientas).filter(([n, h]) => `${n} ${h.ruta}`.toLowerCase().includes(q));
+  const programas = inventario.programas.filter((p) =>
+    `${p.nombre} ${p.editor}`.toLowerCase().includes(q),
+  );
+  const herramientas = Object.entries(inventario.herramientas).filter(([n, h]) =>
+    `${n} ${h.ruta}`.toLowerCase().includes(q),
+  );
   const lineas = [
     ...herramientas.map(([n, h]) => `Herramienta: ${n} ${h.version} (${h.ruta})`),
-    ...programas.slice(0, 40).map((p) => `Programa: ${p.nombre}${p.version ? ` ${p.version}` : ''}${p.editor ? ` · ${p.editor}` : ''}`),
+    ...programas
+      .slice(0, 40)
+      .map(
+        (p) =>
+          `Programa: ${p.nombre}${p.version ? ` ${p.version}` : ''}${p.editor ? ` · ${p.editor}` : ''}`,
+      ),
   ];
-  return { texto: lineas.length ? lineas.join('\n') : `No encontré «${consulta}» instalado en el equipo.`, total: lineas.length };
+  return {
+    texto: lineas.length ? lineas.join('\n') : `No encontré «${consulta}» instalado en el equipo.`,
+    total: lineas.length,
+  };
 }

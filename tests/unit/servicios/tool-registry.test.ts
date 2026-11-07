@@ -19,7 +19,7 @@ describe('ToolRegistry', () => {
       ok: true,
       resumen: `Procesado: ${params.texto}`,
       salida: `Resultado: ${params.texto}`,
-    })
+    }),
   );
 
   it('registra herramientas correctamente', () => {
@@ -90,9 +90,9 @@ describe('ToolRegistry', () => {
     // La acción debe tener el tipo correcto y los campos que extraerParametros espera
     const accion = { tipo: 'ejemplo' as const, texto: 'test' };
     const ctx = {} as any;
-    
+
     const resultado = await registry.ejecutar(accion as any, ctx);
-    
+
     // El resultado depende de cómo extraerParametros mapee los campos
     // Como 'texto' no es un campo estándar de Accion, puede que no se extraiga
     // Vamos a verificar que al menos se ejecuta sin error
@@ -103,9 +103,9 @@ describe('ToolRegistry', () => {
   it('reporta error cuando herramienta no existe', async () => {
     const accion = { tipo: 'inexistente' as const };
     const ctx = {} as any;
-    
+
     const resultado = await registry.ejecutar(accion as any, ctx);
-    
+
     expect(resultado.ok).toBe(false);
     expect(resultado.resumen).toContain('no encontrada');
   });
@@ -114,29 +114,24 @@ describe('ToolRegistry', () => {
     registry.registrar(toolEjemplo);
     const accion = { tipo: 'ejemplo' as const, texto: 123 };
     const ctx = {} as any;
-    
+
     const resultado = await registry.ejecutar(accion as any, ctx);
-    
+
     expect(resultado.ok).toBe(false);
     expect(resultado.resumen).toContain('Parámetros inválidos');
   });
 
   it('captura errores durante ejecución', async () => {
-    const toolError = crearTool(
-      'error',
-      'Herramienta que falla',
-      z.object({}),
-      async () => {
-        throw new Error('Error de prueba');
-      }
-    );
-    
+    const toolError = crearTool('error', 'Herramienta que falla', z.object({}), async () => {
+      throw new Error('Error de prueba');
+    });
+
     registry.registrar(toolError);
     const accion = { tipo: 'error' as const };
     const ctx = {} as any;
-    
+
     const resultado = await registry.ejecutar(accion as any, ctx);
-    
+
     expect(resultado.ok).toBe(false);
     expect(resultado.salida).toContain('Error de prueba');
   });

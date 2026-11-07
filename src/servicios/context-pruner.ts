@@ -63,7 +63,10 @@ export class ContextPruner {
 
     // Si aún excede, eliminar turnos viejos
     if (this.necesitaPoda(conversation, presupuesto)) {
-      const mantener = Math.max(recientes, Math.floor(conversation.longitud() * this.config.factorReduccion));
+      const mantener = Math.max(
+        recientes,
+        Math.floor(conversation.longitud() * this.config.factorReduccion),
+      );
       this.podarTurnos(conversation, mantener);
     }
   }

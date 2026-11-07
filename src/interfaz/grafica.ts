@@ -52,7 +52,10 @@ export function crearInterfazGrafica(): Interfaz {
     leer(indicacion) {
       const id = ++contador;
       return new Promise<string | null>((resolver) => {
-        pendientes.set(id, { tipo: 'leer', resolver: (v) => resolver(v === null ? null : String(v)) });
+        pendientes.set(id, {
+          tipo: 'leer',
+          resolver: (v) => resolver(v === null ? null : String(v)),
+        });
         enviar({ t: 'leer', id, indicacion });
       });
     },

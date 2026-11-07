@@ -14,20 +14,20 @@ export const toolEquipo = crearTool(
   schema,
   async (params, ctx) => {
     const inventario = ctx.equipo();
-    
+
     if (!inventario) {
-      return { 
-        ok: false, 
-        resumen: 'Sin inventario', 
-        salida: 'Todavía no tengo el inventario del equipo.' 
+      return {
+        ok: false,
+        resumen: 'Sin inventario',
+        salida: 'Todavía no tengo el inventario del equipo.',
       };
     }
-    
+
     const r = buscarEnEquipo(inventario, params.buscar);
-    return { 
-      ok: true, 
-      resumen: `${r.total} resultado${r.total === 1 ? '' : 's'}`, 
-      salida: r.texto 
+    return {
+      ok: true,
+      resumen: `${r.total} resultado${r.total === 1 ? '' : 's'}`,
+      salida: r.texto,
     };
-  }
+  },
 );

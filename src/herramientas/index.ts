@@ -21,7 +21,7 @@ import { toolEquipo } from './equipo';
 /** Crea un ToolRegistry con todas las herramientas estándar registradas */
 export function crearRegistryEstandar(): ToolRegistry {
   const registry = new ToolRegistry();
-  
+
   registry.registrar(toolLeer);
   registry.registrar(toolListar);
   registry.registrar(toolBuscar);
@@ -29,6 +29,6 @@ export function crearRegistryEstandar(): ToolRegistry {
   registry.registrar(toolEditar);
   registry.registrar(toolEjecutar);
   registry.registrar(toolEquipo);
-  
+
   return registry;
 }

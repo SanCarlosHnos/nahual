@@ -16,12 +16,15 @@ export function interpretarClasificacion(respuesta: string): Intencion | null {
   // Si el texto contiene "TAREA" y no está negado, es tarea
   // Si el texto contiene "MEJORA" y no está negado, es mejora
   // Si el texto contiene "CHARLA" y no está negado, es charla
-  
+
   // Contar ocurrencias y verificar que no estén negadas
-  const tieneTarea = /\bTAREA\b/.test(texto) && !/NO\s+ES\s+TAREA|NO\s+ES\s+UNA\s+TAREA/.test(texto);
-  const tieneMejora = /\bMEJORA\b/.test(texto) && !/NO\s+ES\s+MEJORA|NO\s+ES\s+UNA\s+MEJORA/.test(texto);
-  const tieneCharla = /\bCHARLA\b/.test(texto) && !/NO\s+ES\s+CHARLA|NO\s+ES\s+UNA\s+CHARLA/.test(texto);
-  
+  const tieneTarea =
+    /\bTAREA\b/.test(texto) && !/NO\s+ES\s+TAREA|NO\s+ES\s+UNA\s+TAREA/.test(texto);
+  const tieneMejora =
+    /\bMEJORA\b/.test(texto) && !/NO\s+ES\s+MEJORA|NO\s+ES\s+UNA\s+MEJORA/.test(texto);
+  const tieneCharla =
+    /\bCHARLA\b/.test(texto) && !/NO\s+ES\s+CHARLA|NO\s+ES\s+UNA\s+CHARLA/.test(texto);
+
   // Si hay múltiples intenciones, priorizar la que aparezca primero en el texto
   const posiciones: Array<{ tipo: Intencion; pos: number }> = [];
   if (tieneTarea) {
@@ -36,13 +39,17 @@ export function interpretarClasificacion(respuesta: string): Intencion | null {
     const m = texto.match(/\bCHARLA\b/);
     if (m && m.index !== undefined) posiciones.push({ tipo: 'charla', pos: m.index });
   }
-  
+
   if (posiciones.length === 0) return null;
   posiciones.sort((a, b) => a.pos - b.pos);
   return posiciones[0].tipo;
 }
 
-export async function clasificarIntencion(cfg: Config, mensaje: string, senal?: AbortSignal): Promise<Intencion> {
+export async function clasificarIntencion(
+  cfg: Config,
+  mensaje: string,
+  senal?: AbortSignal,
+): Promise<Intencion> {
   try {
     const respuesta = await conversar(
       cfg,

@@ -14,10 +14,10 @@ export const toolListar = crearTool(
   schema,
   async (params, ctx) => {
     const arbol = arbolDeArchivos(ctx.raiz, params.ruta);
-    return { 
-      ok: true, 
-      resumen: `${arbol.split('\n').length} elementos`, 
-      salida: arbol 
+    return {
+      ok: true,
+      resumen: `${arbol.split('\n').length} elementos`,
+      salida: arbol,
     };
-  }
+  },
 );

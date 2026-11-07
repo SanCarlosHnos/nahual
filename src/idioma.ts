@@ -8,11 +8,68 @@ const ESPANOL_DE_ESPANA =
 
 /** Palabras inglesas que nunca aparecen en un texto técnico en español. */
 const PALABRAS_INGLESAS = new Set([
-  'the', 'and', 'with', 'this', 'that', 'these', 'those', 'you', 'your', 'are', 'is', 'was', 'were',
-  'will', 'would', 'should', 'could', 'here', 'there', "let's", "i'll", "i'm", "it's", "don't", 'we',
-  'our', 'they', 'now', 'first', 'then', 'which', 'what', 'have', 'been', 'from', 'into', 'please',
-  'sure', 'okay', 'also', 'just', 'need', 'want', 'of', 'to', 'for', 'it', 'be', 'by', 'an', 'on',
-  'file', 'step', 'next', 'let', 'going', 'will', 'done', 'great', 'now', 'below', 'above',
+  'the',
+  'and',
+  'with',
+  'this',
+  'that',
+  'these',
+  'those',
+  'you',
+  'your',
+  'are',
+  'is',
+  'was',
+  'were',
+  'will',
+  'would',
+  'should',
+  'could',
+  'here',
+  'there',
+  "let's",
+  "i'll",
+  "i'm",
+  "it's",
+  "don't",
+  'we',
+  'our',
+  'they',
+  'now',
+  'first',
+  'then',
+  'which',
+  'what',
+  'have',
+  'been',
+  'from',
+  'into',
+  'please',
+  'sure',
+  'okay',
+  'also',
+  'just',
+  'need',
+  'want',
+  'of',
+  'to',
+  'for',
+  'it',
+  'be',
+  'by',
+  'an',
+  'on',
+  'file',
+  'step',
+  'next',
+  'let',
+  'going',
+  'will',
+  'done',
+  'great',
+  'now',
+  'below',
+  'above',
 ]);
 
 export interface RevisionIdioma {
@@ -32,9 +89,14 @@ export function quitarNoProsa(texto: string): string {
 export function revisarIdioma(texto: string): RevisionIdioma {
   const prosa = quitarNoProsa(texto);
   if (!prosa.trim()) return { ok: true, motivo: '' };
-  if (OTROS_ALFABETOS.test(prosa)) return { ok: false, motivo: 'usaste caracteres de otro idioma (por ejemplo chino o ruso)' };
+  if (OTROS_ALFABETOS.test(prosa))
+    return { ok: false, motivo: 'usaste caracteres de otro idioma (por ejemplo chino o ruso)' };
   const espana = prosa.match(ESPANOL_DE_ESPANA);
-  if (espana) return { ok: false, motivo: `usaste español de España («${espana[0]}»); usa español latinoamericano` };
+  if (espana)
+    return {
+      ok: false,
+      motivo: `usaste español de España («${espana[0]}»); usa español latinoamericano`,
+    };
   const palabras = prosa.toLowerCase().match(/[a-záéíóúñü']+/g) ?? [];
   const inglesas = palabras.filter((p) => PALABRAS_INGLESAS.has(p));
   const distintas = [...new Set(inglesas)];

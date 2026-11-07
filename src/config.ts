@@ -39,7 +39,9 @@ export function cargarConfig(): Config {
   let cfg: Config = { ...PREDETERMINADA };
   if (existsSync(ARCHIVO)) {
     try {
-      const datos = JSON.parse(readFileSync(ARCHIVO, 'utf8').replace(/^﻿/, '')) as Partial<Config>;
+      const datos = JSON.parse(
+        readFileSync(ARCHIVO, 'utf8').replace(/^FEFF/, ''),
+      ) as Partial<Config>;
       cfg = { ...PREDETERMINADA, ...datos };
     } catch {
       // configuración dañada: se usan los valores predeterminados

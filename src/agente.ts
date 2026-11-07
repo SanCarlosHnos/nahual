@@ -68,13 +68,19 @@ export class Agente {
       this.podar();
       this.informarContexto();
 
-      ui.emitir({ tipo: 'pensando', activo: true, etiqueta: paso === 1 ? 'Pensando' : 'Trabajando' });
+      ui.emitir({
+        tipo: 'pensando',
+        activo: true,
+        etiqueta: paso === 1 ? 'Pensando' : 'Trabajando',
+      });
       let respuesta: string;
       try {
         respuesta = await conversar(this.cfg, this.conversacion.obtenerHistorial(), {
           senal,
           // Con la misma temperatura el modelo vuelve a elegir la salida que ya falló.
-          temperatura: reintentar ? Math.min(0.9, this.cfg.temperatura + 0.3) : this.cfg.temperatura,
+          temperatura: reintentar
+            ? Math.min(0.9, this.cfg.temperatura + 0.3)
+            : this.cfg.temperatura,
           alToken: (_f, total) => {
             if (total % 8 === 0) ui.emitir({ tipo: 'progreso', tokens: total });
           },
@@ -150,14 +156,18 @@ export class Agente {
           const faltantes = this.plan.filter((paso) => !paso.hecho).length;
           resultados.push(
             `### Hecho(paso ${accion.paso}) → ${p ? 'bien' : 'ERROR'}\n` +
-              (p ? `Quedan ${faltantes} pasos sin terminar.` : `El plan no tiene un paso ${accion.paso}.`),
+              (p
+                ? `Quedan ${faltantes} pasos sin terminar.`
+                : `El plan no tiene un paso ${accion.paso}.`),
           );
           continue;
         }
         if (accion.tipo === 'preguntar') {
           ui.emitir({ tipo: 'asistente', texto: accion.pregunta });
           const respuestaUsuario = await ui.leer('Tu respuesta');
-          resultados.push(`### Pregunta → respuesta del usuario\n${respuestaUsuario ?? '(el usuario no respondió)'}`);
+          resultados.push(
+            `### Pregunta → respuesta del usuario\n${respuestaUsuario ?? '(el usuario no respondió)'}`,
+          );
           continue;
         }
         if (accion.tipo === 'recordar') {
@@ -176,7 +186,11 @@ export class Agente {
       }
 
       if (op.pararEnPlan && planNuevo) {
-        if (resultados.length) this.conversacion.agregar({ role: 'user', content: `RESULTADOS:\n\n${resultados.join('\n\n')}` });
+        if (resultados.length)
+          this.conversacion.agregar({
+            role: 'user',
+            content: `RESULTADOS:\n\n${resultados.join('\n\n')}`,
+          });
         return { terminado: true, resumen: texto, plan: this.plan };
       }
 
@@ -206,16 +220,27 @@ export class Agente {
         atascos++;
         this.detectorBucles.reiniciar();
         if (atascos >= 3) {
-          return { terminado: false, resumen: 'Me quedé repitiendo lo mismo sin avanzar. Dime cómo prefieres que lo resuelva.', plan: this.plan };
+          return {
+            terminado: false,
+            resumen:
+              'Me quedé repitiendo lo mismo sin avanzar. Dime cómo prefieres que lo resuelva.',
+            plan: this.plan,
+          };
         }
         reintentar = true;
-        ui.emitir({ tipo: 'aviso', texto: 'Detecté que estaba repitiendo lo mismo; cambio de estrategia.' });
+        ui.emitir({
+          tipo: 'aviso',
+          texto: 'Detecté que estaba repitiendo lo mismo; cambio de estrategia.',
+        });
       }
 
       let notas = '';
-      if (!idioma.ok) notas += `\nRecuerda: escribe solo en español latinoamericano (${idioma.motivo}).`;
-      if (texto.length > MAX_TEXTO_SIN_ACCION) notas += '\nSé más breve: una o dos frases antes de las acciones.';
-      if (resumenFinal !== null && !todoBien) notas += '\nTodavía no puedes terminar: hay errores sin resolver.';
+      if (!idioma.ok)
+        notas += `\nRecuerda: escribe solo en español latinoamericano (${idioma.motivo}).`;
+      if (texto.length > MAX_TEXTO_SIN_ACCION)
+        notas += '\nSé más breve: una o dos frases antes de las acciones.';
+      if (resumenFinal !== null && !todoBien)
+        notas += '\nTodavía no puedes terminar: hay errores sin resolver.';
       const indicacion = atasco
         ? 'ALTO: llevas varias vueltas con las mismas acciones y ningún cambio. Di en una frase por qué no funciona y toma otro camino: otra herramienta, otro archivo o preguntar al usuario. No repitas la acción que ya falló.'
         : todoBien
@@ -229,7 +254,11 @@ export class Agente {
         content: `RESULTADOS:\n\n${resultados.join('\n\n') || '(sin resultados)'}\n\n${indicacion}${notas}`,
       });
     }
-    return { terminado: false, resumen: 'Llegué al máximo de pasos sin terminar. Dime si continúo.', plan: this.plan };
+    return {
+      terminado: false,
+      resumen: 'Llegué al máximo de pasos sin terminar. Dime si continúo.',
+      plan: this.plan,
+    };
   }
 
   private interrumpido(): ResultadoAgente {
@@ -251,10 +280,17 @@ export class Agente {
     // Podar acciones adicionales específicas de Agente (cuerpo de etiquetas escribir/editar)
     const historial = this.conversacion.obtenerHistorial();
     const inicio = this.conversacion.obtenerInicio();
-    for (let i = inicio + 1; i < historial.length - recientes && this.conversacion.tamano() > presupuesto; i++) {
+    for (
+      let i = inicio + 1;
+      i < historial.length - recientes && this.conversacion.tamano() > presupuesto;
+      i++
+    ) {
       const m = historial[i]!;
       if (m.role === 'assistant') {
-        const nuevo = m.content.replace(CUERPO_ACCION, '$1\n[cuerpo omitido para ahorrar memoria]\n$2');
+        const nuevo = m.content.replace(
+          CUERPO_ACCION,
+          '$1\n[cuerpo omitido para ahorrar memoria]\n$2',
+        );
         this.conversacion.modificar(i, nuevo);
       }
     }
@@ -262,7 +298,10 @@ export class Agente {
     // Si resumir no alcanza, se descartan los turnos más viejos. Nunca se deja que Ollama
     // recorte el inicio de la conversación: ahí van las indicaciones y el protocolo, y sin
     // ellos el modelo deja de escribir acciones válidas y se queda repitiendo texto.
-    while (this.conversacion.longitud() - recientes > inicio + 1 && this.conversacion.tamano() > presupuesto) {
+    while (
+      this.conversacion.longitud() - recientes > inicio + 1 &&
+      this.conversacion.tamano() > presupuesto
+    ) {
       this.conversacion.eliminarEn(inicio + 1);
     }
   }

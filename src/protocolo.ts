@@ -69,14 +69,20 @@ export function analizarBloques(cuerpo: string): BloqueEdicion[] {
   const bloques: BloqueEdicion[] = [];
   EXPRESION_BLOQUE.lastIndex = 0;
   let m: RegExpExecArray | null;
-  while ((m = EXPRESION_BLOQUE.exec(cuerpo))) bloques.push({ buscar: m[1] ?? '', reemplazar: m[2] ?? '' });
+  while ((m = EXPRESION_BLOQUE.exec(cuerpo)))
+    bloques.push({ buscar: m[1] ?? '', reemplazar: m[2] ?? '' });
   return bloques;
 }
 
 export function analizarPlan(cuerpo: string): string[] {
   return cuerpo
     .split('\n')
-    .map((l) => l.trim().replace(/^(\d+[.)-]|[-*•])\s*/, '').trim())
+    .map((l) =>
+      l
+        .trim()
+        .replace(/^(\d+[.)-]|[-*•])\s*/, '')
+        .trim(),
+    )
     .filter(Boolean)
     .slice(0, 12);
 }
@@ -88,16 +94,20 @@ export function analizarAcciones(respuesta: string): Accion[] {
   EXPRESION_ACCIONES.lastIndex = 0;
   let m: RegExpExecArray | null;
   while ((m = EXPRESION_ACCIONES.exec(limpio))) {
-    if (m[1]) acciones.push({ tipo: /^(leer|read)$/.test(m[1]) ? 'leer' : 'listar', ruta: m[2] ?? '.' });
+    if (m[1])
+      acciones.push({ tipo: /^(leer|read)$/.test(m[1]) ? 'leer' : 'listar', ruta: m[2] ?? '.' });
     else if (m[3] !== undefined) acciones.push({ tipo: 'buscar', patron: m[3], ruta: m[4] ?? '.' });
-    else if (m[5]) acciones.push({ tipo: 'escribir', ruta: m[6] ?? '', contenido: quitarVallas(m[7] ?? '') });
-    else if (m[8]) acciones.push({ tipo: 'editar', ruta: m[9] ?? '', bloques: analizarBloques(m[10] ?? '') });
+    else if (m[5])
+      acciones.push({ tipo: 'escribir', ruta: m[6] ?? '', contenido: quitarVallas(m[7] ?? '') });
+    else if (m[8])
+      acciones.push({ tipo: 'editar', ruta: m[9] ?? '', bloques: analizarBloques(m[10] ?? '') });
     else if (m[11]) acciones.push({ tipo: 'ejecutar', comando: (m[12] ?? '').trim() });
     else if (m[13] !== undefined) acciones.push({ tipo: 'plan', pasos: analizarPlan(m[13]) });
     else if (m[14] !== undefined) acciones.push({ tipo: 'hecho', paso: Number(m[14]) });
     else if (m[15] !== undefined) acciones.push({ tipo: 'preguntar', pregunta: m[15].trim() });
     else if (m[16] !== undefined) acciones.push({ tipo: 'recordar', dato: m[16].trim() });
-    else if (m[0].startsWith('<equipo')) acciones.push({ tipo: 'equipo', buscar: (m[17] ?? '').trim() });
+    else if (m[0].startsWith('<equipo'))
+      acciones.push({ tipo: 'equipo', buscar: (m[17] ?? '').trim() });
     else if (m[18]) acciones.push({ tipo: 'terminar', resumen: (m[19] ?? '').trim() });
   }
   return acciones;

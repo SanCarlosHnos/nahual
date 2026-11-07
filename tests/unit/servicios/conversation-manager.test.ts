@@ -29,7 +29,8 @@ describe('ConversationManager', () => {
   });
 
   it('calcula tamaño total en caracteres', () => {
-    const tamanoInicial = systemPrompt.length + ejemplo[0].content.length + ejemplo[1].content.length;
+    const tamanoInicial =
+      systemPrompt.length + ejemplo[0].content.length + ejemplo[1].content.length;
     expect(manager.tamano()).toBe(tamanoInicial);
 
     manager.agregar({ role: 'user', content: 'Test' });

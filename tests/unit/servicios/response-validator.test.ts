@@ -72,14 +72,18 @@ describe('ResponseValidator', () => {
   describe('validarSintaxis', () => {
     it('rechaza escribir sin contenido', () => {
       const validator = new ResponseValidator();
-      const result = validator.validarSintaxis([crearAccion('escribir', { ruta: 'a.ts', contenido: '' })]);
+      const result = validator.validarSintaxis([
+        crearAccion('escribir', { ruta: 'a.ts', contenido: '' }),
+      ]);
       expect(result.valida).toBe(false);
       expect(result.razon).toContain('contenido');
     });
 
     it('rechaza editar sin bloques', () => {
       const validator = new ResponseValidator();
-      const result = validator.validarSintaxis([crearAccion('editar', { ruta: 'a.ts', bloques: [] })]);
+      const result = validator.validarSintaxis([
+        crearAccion('editar', { ruta: 'a.ts', bloques: [] }),
+      ]);
       expect(result.valida).toBe(false);
       expect(result.razon).toContain('bloques');
     });
@@ -116,7 +120,9 @@ describe('ResponseValidator', () => {
 
     it('falla si la sintaxis es inválida', () => {
       const validator = new ResponseValidator();
-      const result = validator.validarCompleto('Texto válido', [crearAccion('escribir', { ruta: 'a.ts', contenido: '' })]);
+      const result = validator.validarCompleto('Texto válido', [
+        crearAccion('escribir', { ruta: 'a.ts', contenido: '' }),
+      ]);
       expect(result.valida).toBe(false);
     });
 

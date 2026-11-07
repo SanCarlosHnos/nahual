@@ -6,7 +6,8 @@ import { dirname } from 'node:path';
 import { rutaSegura, rutaRelativa } from '../herramientas';
 import { crearTool } from '../servicios/tool';
 
-const BLOQUEADO_EN_PLANEACION = 'Estás en la fase de planeación: todavía no puedes modificar archivos ni ejecutar comandos. Presenta tu plan con la acción plan.';
+const BLOQUEADO_EN_PLANEACION =
+  'Estás en la fase de planeación: todavía no puedes modificar archivos ni ejecutar comandos. Presenta tu plan con la acción plan.';
 
 function esProtegida(ctx: any, absoluta: string): boolean {
   const rel = rutaRelativa(ctx.raiz, absoluta);
@@ -36,22 +37,22 @@ export const toolEscribir = crearTool(
     if (ctx.soloLectura) {
       return { ok: false, resumen: 'Bloqueado en la planeación', salida: BLOQUEADO_EN_PLANEACION };
     }
-    
+
     const absoluta = rutaSegura(ctx.raiz, params.ruta);
-    
+
     if (esProtegida(ctx, absoluta)) {
-      return { 
-        ok: false, 
-        resumen: 'Archivo protegido', 
-        salida: `Archivo protegido, no se puede modificar: ${params.ruta}` 
+      return {
+        ok: false,
+        resumen: 'Archivo protegido',
+        salida: `Archivo protegido, no se puede modificar: ${params.ruta}`,
       };
     }
-    
+
     const existia = existsSync(absoluta);
     mkdirSync(dirname(absoluta), { recursive: true });
     writeFileSync(absoluta, params.contenido);
     ctx.cambiados.add(rutaRelativa(ctx.raiz, absoluta));
-    
+
     const lineas = params.contenido.split('\n').length;
     return {
       ok: true,
@@ -59,5 +60,5 @@ export const toolEscribir = crearTool(
       resumen: `${existia ? 'Reescribí' : 'Creé'} ${lineas} líneas`,
       diferencias: lineasDeDiferencia('+', params.contenido.trimEnd()).slice(0, 10),
     };
-  }
+  },
 );

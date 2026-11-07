@@ -44,7 +44,9 @@ export const comandos: Comando[] = [
         '  • «quiero que puedas leer archivos PDF» → me mejoro a mí mismo (con tu permiso)',
         '',
         'Comandos:',
-        ...comandos.map((c) => `  /${c.nombre}${c.argumentos ? ' ' + c.argumentos : ''}  —  ${c.descripcion}`),
+        ...comandos.map(
+          (c) => `  /${c.nombre}${c.argumentos ? ' ' + c.argumentos : ''}  —  ${c.descripcion}`,
+        ),
         '',
         'Esc o Ctrl+C: interrumpe lo que esté haciendo.',
       ];
@@ -54,19 +56,31 @@ export const comandos: Comando[] = [
   {
     nombre: 'mejorar',
     argumentos: '<qué quieres que aprenda o cambie de sí mismo>',
-    descripcion: 'Me mejoro a mí mismo: te muestro un plan, lo apruebas y el guardián lo verifica antes de aplicarlo',
+    descripcion:
+      'Me mejoro a mí mismo: te muestro un plan, lo apruebas y el guardián lo verifica antes de aplicarlo',
     async ejecutar({ estado, argumentos }) {
       if (!argumentos) {
-        estado.ui.emitir({ tipo: 'aviso', texto: 'Dime qué quieres que mejore. Ejemplo: /mejorar que tus respuestas sean más cortas' });
+        estado.ui.emitir({
+          tipo: 'aviso',
+          texto:
+            'Dime qué quieres que mejore. Ejemplo: /mejorar que tus respuestas sean más cortas',
+        });
         return;
       }
       const archivo = process.env.NAHUAL_PETICION;
       if (!archivo) {
-        estado.ui.emitir({ tipo: 'error', texto: 'Las mejoras solo funcionan si abres Nahual con el comando "nahual" (el supervisor).' });
+        estado.ui.emitir({
+          tipo: 'error',
+          texto:
+            'Las mejoras solo funcionan si abres Nahual con el comando "nahual" (el supervisor).',
+        });
         return;
       }
       mkdirSync(dirname(archivo), { recursive: true });
-      writeFileSync(archivo, JSON.stringify({ instruccion: argumentos, fecha: new Date().toISOString() }));
+      writeFileSync(
+        archivo,
+        JSON.stringify({ instruccion: argumentos, fecha: new Date().toISOString() }),
+      );
       return 'mejorar';
     },
   },
@@ -76,7 +90,10 @@ export const comandos: Comando[] = [
     async ejecutar({ estado }) {
       const ultimo = git('log', '-1', '--pretty=%s').salida;
       if (!ultimo.startsWith('mejora:')) {
-        estado.ui.emitir({ tipo: 'aviso', texto: `Mi último cambio no fue una mejora («${ultimo}»).` });
+        estado.ui.emitir({
+          tipo: 'aviso',
+          texto: `Mi último cambio no fue una mejora («${ultimo}»).`,
+        });
         return;
       }
       const eleccion = await estado.ui.elegir(`¿Revierto mi última mejora?`, ['Sí', 'No'], ultimo);
@@ -95,7 +112,11 @@ export const comandos: Comando[] = [
     descripcion: 'Muestra cómo he ido evolucionando',
     async ejecutar({ estado }) {
       const registro = git('log', '--pretty=format:%h  %ad  %s', '--date=short', '-n', '30').salida;
-      estado.ui.emitir({ tipo: 'bloque', titulo: 'Mi evolución', lineas: (registro || '(sin historial)').split('\n') });
+      estado.ui.emitir({
+        tipo: 'bloque',
+        titulo: 'Mi evolución',
+        lineas: (registro || '(sin historial)').split('\n'),
+      });
     },
   },
   {
@@ -105,7 +126,11 @@ export const comandos: Comando[] = [
       estado.ui.emitir({ tipo: 'info', texto: 'Revisando tu equipo…' });
       estado.equipo = (await recolectarEquipo()) ?? estado.equipo;
       const modelos = await listarModelos(estado.cfg).catch(() => [] as string[]);
-      estado.ui.emitir({ tipo: 'bloque', titulo: 'Tu equipo', lineas: resumenEquipo(estado.equipo, modelos).split('\n') });
+      estado.ui.emitir({
+        tipo: 'bloque',
+        titulo: 'Tu equipo',
+        lineas: resumenEquipo(estado.equipo, modelos).split('\n'),
+      });
     },
   },
   {
@@ -119,7 +144,10 @@ export const comandos: Comando[] = [
       }
       const modelos = await listarModelos(estado.cfg).catch(() => [] as string[]);
       if (modelos.length && !modeloInstalado(modelos, argumentos)) {
-        estado.ui.emitir({ tipo: 'aviso', texto: `«${argumentos}» no aparece en Ollama; lo usaré de todos modos.` });
+        estado.ui.emitir({
+          tipo: 'aviso',
+          texto: `«${argumentos}» no aparece en Ollama; lo usaré de todos modos.`,
+        });
       }
       estado.cfg.modelo = argumentos;
       guardarConfig(estado.cfg);

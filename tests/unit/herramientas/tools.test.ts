@@ -36,16 +36,16 @@ describe('Herramientas como plugins', () => {
 
   describe('toolEscribir', () => {
     it('valida parámetros con Zod', () => {
-      const resultado = toolEscribir.schema.safeParse({ 
-        ruta: 'test.txt', 
-        contenido: 'hola' 
+      const resultado = toolEscribir.schema.safeParse({
+        ruta: 'test.txt',
+        contenido: 'hola',
       });
       expect(resultado.success).toBe(true);
     });
 
     it('rechaza sin contenido', () => {
-      const resultado = toolEscribir.schema.safeParse({ 
-        ruta: 'test.txt'
+      const resultado = toolEscribir.schema.safeParse({
+        ruta: 'test.txt',
       });
       expect(resultado.success).toBe(false);
     });
@@ -53,17 +53,17 @@ describe('Herramientas como plugins', () => {
 
   describe('toolEditar', () => {
     it('valida parámetros con Zod', () => {
-      const resultado = toolEditar.schema.safeParse({ 
+      const resultado = toolEditar.schema.safeParse({
         ruta: 'test.txt',
-        bloques: [{ buscar: 'a', reemplazar: 'b' }]
+        bloques: [{ buscar: 'a', reemplazar: 'b' }],
       });
       expect(resultado.success).toBe(true);
     });
 
     it('rechaza sin bloques', () => {
-      const resultado = toolEditar.schema.safeParse({ 
+      const resultado = toolEditar.schema.safeParse({
         ruta: 'test.txt',
-        bloques: []
+        bloques: [],
       });
       expect(resultado.success).toBe(false);
     });
@@ -71,16 +71,16 @@ describe('Herramientas como plugins', () => {
 
   describe('toolBuscar', () => {
     it('valida parámetros con Zod', () => {
-      const resultado = toolBuscar.schema.safeParse({ 
+      const resultado = toolBuscar.schema.safeParse({
         patron: 'test',
-        ruta: '.'
+        ruta: '.',
       });
       expect(resultado.success).toBe(true);
     });
 
     it('rechaza patrón vacío', () => {
-      const resultado = toolBuscar.schema.safeParse({ 
-        patron: ''
+      const resultado = toolBuscar.schema.safeParse({
+        patron: '',
       });
       expect(resultado.success).toBe(false);
     });
@@ -88,15 +88,15 @@ describe('Herramientas como plugins', () => {
 
   describe('toolEjecutar', () => {
     it('valida parámetros con Zod', () => {
-      const resultado = toolEjecutar.schema.safeParse({ 
-        comando: 'echo hola'
+      const resultado = toolEjecutar.schema.safeParse({
+        comando: 'echo hola',
       });
       expect(resultado.success).toBe(true);
     });
 
     it('rechaza comando vacío', () => {
-      const resultado = toolEjecutar.schema.safeParse({ 
-        comando: ''
+      const resultado = toolEjecutar.schema.safeParse({
+        comando: '',
       });
       expect(resultado.success).toBe(false);
     });
@@ -104,8 +104,8 @@ describe('Herramientas como plugins', () => {
 
   describe('toolEquipo', () => {
     it('valida parámetros con Zod', () => {
-      const resultado = toolEquipo.schema.safeParse({ 
-        buscar: 'python'
+      const resultado = toolEquipo.schema.safeParse({
+        buscar: 'python',
       });
       expect(resultado.success).toBe(true);
     });
@@ -115,7 +115,7 @@ describe('Herramientas como plugins', () => {
     it('registra todas las herramientas estándar', () => {
       const registry = crearRegistryEstandar();
       const nombres = registry.listarNombres();
-      
+
       expect(nombres).toContain('leer');
       expect(nombres).toContain('listar');
       expect(nombres).toContain('buscar');
@@ -128,7 +128,7 @@ describe('Herramientas como plugins', () => {
     it('todas las herramientas tienen schema Zod', () => {
       const registry = crearRegistryEstandar();
       const herramientas = registry.listar();
-      
+
       herramientas.forEach((tool) => {
         expect(tool.schema).toBeDefined();
         expect(tool.nombre).toBeTruthy();

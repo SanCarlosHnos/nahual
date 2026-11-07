@@ -5,7 +5,8 @@ import { mkdirSync } from 'node:fs';
 import { ejecutarComando } from '../herramientas';
 import { crearTool } from '../servicios/tool';
 
-const BLOQUEADO_EN_PLANEACION = 'Estás en la fase de planeación: todavía no puedes modificar archivos ni ejecutar comandos. Presenta tu plan con la acción plan.';
+const BLOQUEADO_EN_PLANEACION =
+  'Estás en la fase de planeación: todavía no puedes modificar archivos ni ejecutar comandos. Presenta tu plan con la acción plan.';
 
 function esComandoPeligroso(comando: string): boolean {
   const comandosPeligrosos = [
@@ -30,35 +31,37 @@ export const toolEjecutar = crearTool(
     if (ctx.soloLectura) {
       return { ok: false, resumen: 'Bloqueado en la planeación', salida: BLOQUEADO_EN_PLANEACION };
     }
-    
+
     if (esComandoPeligroso(params.comando)) {
       return {
         ok: false,
-        salida: 'Este comando parece peligroso y requiere aprobación explícita incluso con autoAprobar activado.',
+        salida:
+          'Este comando parece peligroso y requiere aprobación explícita incluso con autoAprobar activado.',
         resumen: 'Comando peligroso bloqueado',
       };
     }
-    
+
     if (!ctx.autoAprobar) {
-      const opciones = ctx.permitirSiempre 
-        ? ['Sí', 'Sí, y no volver a preguntar en esta sesión', 'No'] 
+      const opciones = ctx.permitirSiempre
+        ? ['Sí', 'Sí, y no volver a preguntar en esta sesión', 'No']
         : ['Sí', 'No'];
       const eleccion = await ctx.ui.elegir('¿Ejecuto este comando?', opciones, params.comando);
-      
+
       if (eleccion < 0 || opciones[eleccion] === 'No') {
         return {
           ok: false,
-          salida: 'El usuario no autorizó este comando. Pregúntale qué prefiere o resuélvelo de otra forma.',
+          salida:
+            'El usuario no autorizó este comando. Pregúntale qué prefiere o resuélvelo de otra forma.',
           resumen: 'No autorizado',
         };
       }
-      
+
       if (ctx.permitirSiempre && eleccion === 1) {
         ctx.autoAprobar = true;
       }
     }
-    
+
     mkdirSync(ctx.raiz, { recursive: true });
     return ejecutarComando(params.comando, ctx.raiz, { senal });
-  }
+  },
 );

@@ -16,7 +16,11 @@ export interface OpcionesConversar {
 }
 
 /** Envía la conversación a Ollama y devuelve la respuesta completa. */
-export async function conversar(cfg: Config, mensajes: Mensaje[], op: OpcionesConversar = {}): Promise<string> {
+export async function conversar(
+  cfg: Config,
+  mensajes: Mensaje[],
+  op: OpcionesConversar = {},
+): Promise<string> {
   let respuesta: Response;
   try {
     respuesta = await fetch(`${cfg.urlOllama}/api/chat`, {
@@ -38,9 +42,13 @@ export async function conversar(cfg: Config, mensajes: Mensaje[], op: OpcionesCo
     });
   } catch (e) {
     if (op.senal?.aborted) throw e;
-    throw new Error(`No pude conectarme con Ollama en ${cfg.urlOllama}. ¿Está abierto? (${(e as Error).message})`);
+    throw new Error(
+      `No pude conectarme con Ollama en ${cfg.urlOllama}. ¿Está abierto? (${(e as Error).message})`,
+      { cause: e },
+    );
   }
-  if (!respuesta.ok || !respuesta.body) throw new Error(`Ollama respondió ${respuesta.status}: ${await respuesta.text()}`);
+  if (!respuesta.ok || !respuesta.body)
+    throw new Error(`Ollama respondió ${respuesta.status}: ${await respuesta.text()}`);
 
   const lector = respuesta.body.getReader();
   const decodificador = new TextDecoder();

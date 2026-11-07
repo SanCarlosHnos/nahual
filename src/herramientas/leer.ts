@@ -15,25 +15,25 @@ export const toolLeer = crearTool(
   schema,
   async (params, ctx) => {
     const absoluta = rutaSegura(ctx.raiz, params.ruta);
-    
+
     if (!existsSync(absoluta)) {
       return { ok: false, resumen: 'No existe', salida: `No existe: ${params.ruta}` };
     }
-    
+
     if (statSync(absoluta).isDirectory()) {
       const arbol = arbolDeArchivos(ctx.raiz, params.ruta);
-      return { 
-        ok: true, 
-        resumen: `${arbol.split('\n').length} elementos`, 
-        salida: arbol 
+      return {
+        ok: true,
+        resumen: `${arbol.split('\n').length} elementos`,
+        salida: arbol,
       };
     }
-    
+
     const contenido = readFileSync(absoluta, 'utf8');
-    return { 
-      ok: true, 
-      resumen: `Leí ${contenido.split('\n').length} líneas`, 
-      salida: recortar(contenido, 20000) 
+    return {
+      ok: true,
+      resumen: `Leí ${contenido.split('\n').length} líneas`,
+      salida: recortar(contenido, 20000),
     };
-  }
+  },
 );

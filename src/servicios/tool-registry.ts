@@ -38,7 +38,10 @@ export class ToolRegistry {
   }
 
   /** Valida los parámetros de una herramienta usando su schema Zod */
-  validar<T>(nombre: string, params: unknown): { ok: true; data: T } | { ok: false; error: string } {
+  validar<T>(
+    nombre: string,
+    params: unknown,
+  ): { ok: true; data: T } | { ok: false; error: string } {
     const tool = this.herramientas.get(nombre);
     if (!tool) {
       return { ok: false, error: `Herramienta '${nombre}' no encontrada` };
@@ -48,7 +51,9 @@ export class ToolRegistry {
     if (result.success) {
       return { ok: true, data: result.data as T };
     } else {
-      const errores = result.error.issues.map((e: any) => `${e.path.join('.')}: ${e.message}`).join(', ');
+      const errores = result.error.issues
+        .map((e: any) => `${e.path.join('.')}: ${e.message}`)
+        .join(', ');
       return { ok: false, error: `Validación fallida: ${errores}` };
     }
   }
@@ -57,7 +62,7 @@ export class ToolRegistry {
   async ejecutar(
     accion: Accion,
     ctx: ContextoHerramientas,
-    senal?: AbortSignal
+    senal?: AbortSignal,
   ): Promise<ResultadoHerramienta> {
     const tool = this.herramientas.get(accion.tipo);
     if (!tool) {
@@ -70,7 +75,7 @@ export class ToolRegistry {
 
     const params = extraerParametros(tool, accion);
     const validacion = this.validar(accion.tipo, params);
-    
+
     if (!validacion.ok) {
       return {
         ok: false,

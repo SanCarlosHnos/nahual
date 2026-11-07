@@ -25,13 +25,21 @@ export async function crearModeloNahual(cfg: Config): Promise<ResultadoHerramien
   mkdirSync(DIR_DATOS, { recursive: true });
   const archivo = join(DIR_DATOS, 'Modelfile');
   writeFileSync(archivo, textoModelfile(cfg.modeloBase, cfg.contexto));
-  return ejecutarComando(`ollama create ${cfg.modelo} -f "${archivo}"`, DIR_DATOS, { limiteMs: 600000 });
+  return ejecutarComando(`ollama create ${cfg.modelo} -f "${archivo}"`, DIR_DATOS, {
+    limiteMs: 600000,
+  });
 }
 
-if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href && process.argv.includes('--crear')) {
+if (
+  process.argv[1] &&
+  import.meta.url === pathToFileURL(process.argv[1]).href &&
+  process.argv.includes('--crear')
+) {
   const cfg = cargarConfig();
   console.log(`Creando el modelo «${cfg.modelo}» a partir de ${cfg.modeloBase}…`);
   const r = await crearModeloNahual(cfg);
-  console.log(r.ok ? `✔ Modelo «${cfg.modelo}» listo.` : `✖ No se pudo crear el modelo:\n${r.salida}`);
+  console.log(
+    r.ok ? `✔ Modelo «${cfg.modelo}» listo.` : `✖ No se pudo crear el modelo:\n${r.salida}`,
+  );
   process.exit(r.ok ? 0 : 1);
 }

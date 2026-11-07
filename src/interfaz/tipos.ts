@@ -11,7 +11,14 @@ export interface LineaDiferencia {
 }
 
 export type Evento =
-  | { tipo: 'bienvenida'; titulo: string; version: string; modelo: string; carpeta: string; consejos: string[] }
+  | {
+      tipo: 'bienvenida';
+      titulo: string;
+      version: string;
+      modelo: string;
+      carpeta: string;
+      consejos: string[];
+    }
   | { tipo: 'usuario'; texto: string }
   | { tipo: 'asistente'; texto: string }
   | { tipo: 'accion'; nombre: string; detalle: string }

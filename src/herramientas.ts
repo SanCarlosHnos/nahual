@@ -34,8 +34,20 @@ export interface ResultadoHerramienta {
   diferencias?: LineaDiferencia[];
 }
 
-const IGNORADOS = new Set(['node_modules', '.git', 'dist', 'build', '.next', '.venv', '__pycache__', 'target', 'coverage', '.taller']);
-const BINARIOS = /\.(png|jpe?g|gif|webp|ico|pdf|zip|gz|exe|dll|woff2?|ttf|mp[34]|wav|lock|sqlite|db)$/i;
+const IGNORADOS = new Set([
+  'node_modules',
+  '.git',
+  'dist',
+  'build',
+  '.next',
+  '.venv',
+  '__pycache__',
+  'target',
+  'coverage',
+  '.taller',
+]);
+const BINARIOS =
+  /\.(png|jpe?g|gif|webp|ico|pdf|zip|gz|exe|dll|woff2?|ttf|mp[34]|wav|lock|sqlite|db)$/i;
 const MAX_SALIDA = 12000;
 const MAX_DIFERENCIAS = 24;
 const MAX_SALIDA_COMANDO = 1_000_000; // 1MB en lugar de 4MB para evitar consumo excesivo de memoria
@@ -50,7 +62,8 @@ export function recortar(texto: string, maximo = MAX_SALIDA): string {
 export function rutaSegura(raiz: string, ruta: string): string {
   const absoluta = resolve(raiz, ruta || '.');
   const rel = relative(raiz, absoluta);
-  if (rel.startsWith('..') || isAbsolute(rel)) throw new Error(`Ruta fuera de la carpeta de trabajo: ${ruta}`);
+  if (rel.startsWith('..') || isAbsolute(rel))
+    throw new Error(`Ruta fuera de la carpeta de trabajo: ${ruta}`);
   return absoluta;
 }
 
@@ -94,14 +107,18 @@ function esProtegida(ctx: ContextoHerramientas, absoluta: string): boolean {
  * Aplica un bloque BUSCAR/REEMPLAZAR. Primero busca coincidencia exacta; si no hay,
  * compara línea por línea ignorando espacios al inicio y al final. Devuelve null si no encaja.
  */
-export function aplicarEdicion(contenido: string, buscar: string, reemplazar: string): string | null {
+export function aplicarEdicion(
+  contenido: string,
+  buscar: string,
+  reemplazar: string,
+): string | null {
   if (!buscar.trim()) return null;
   const finDeLinea = contenido.includes('\r\n') ? '\r\n' : '\n';
   const c = contenido.replace(/\r\n/g, '\n');
   const b = buscar.replace(/\r\n/g, '\n');
   const r = reemplazar.replace(/\r\n/g, '\n');
   let resultado: string | null = null;
-  
+
   // Buscar todas las coincidencias exactas
   const coincidenciasExactas: number[] = [];
   let posicion = c.indexOf(b);
@@ -109,13 +126,14 @@ export function aplicarEdicion(contenido: string, buscar: string, reemplazar: st
     coincidenciasExactas.push(posicion);
     posicion = c.indexOf(b, posicion + 1);
   }
-  
+
   if (coincidenciasExactas.length > 1) {
     // Múltiples coincidencias exactas: ambigüedad
     return null;
   } else if (coincidenciasExactas.length === 1) {
     // Una sola coincidencia exacta
-    resultado = c.slice(0, coincidenciasExactas[0]) + r + c.slice(coincidenciasExactas[0] + b.length);
+    resultado =
+      c.slice(0, coincidenciasExactas[0]) + r + c.slice(coincidenciasExactas[0] + b.length);
   } else {
     // No hay coincidencia exacta, intentar coincidencia difusa
     const lineas = c.split('\n');
@@ -134,13 +152,21 @@ export function aplicarEdicion(contenido: string, buscar: string, reemplazar: st
     // Si hay múltiples coincidencias difusas, reportar ambigüedad en lugar de elegir la primera
     if (coincidencias.length > 1) return null;
     if (coincidencias.length === 1) {
-      resultado = [...lineas.slice(0, coincidencias[0]), ...r.split('\n'), ...lineas.slice(coincidencias[0] + buscadas.length)].join('\n');
+      resultado = [
+        ...lineas.slice(0, coincidencias[0]),
+        ...r.split('\n'),
+        ...lineas.slice(coincidencias[0] + buscadas.length),
+      ].join('\n');
     }
   }
   return resultado === null ? null : resultado.replace(/\n/g, finDeLinea);
 }
 
-function recorrer(carpeta: string, visitar: (absoluta: string, esCarpeta: boolean, nivel: number) => boolean | void, nivel = 0): void {
+function recorrer(
+  carpeta: string,
+  visitar: (absoluta: string, esCarpeta: boolean, nivel: number) => boolean | void,
+  nivel = 0,
+): void {
   let nombres: string[];
   try {
     nombres = readdirSync(carpeta).sort();
@@ -161,7 +187,12 @@ function recorrer(carpeta: string, visitar: (absoluta: string, esCarpeta: boolea
   }
 }
 
-export function arbolDeArchivos(raiz: string, inicio = '.', maxNivel = 4, maxElementos = 400): string {
+export function arbolDeArchivos(
+  raiz: string,
+  inicio = '.',
+  maxNivel = 4,
+  maxElementos = 400,
+): string {
   const base = rutaSegura(raiz, inicio);
   if (!existsSync(base)) return '(la carpeta todavía no existe)';
   const lineas: string[] = [];
@@ -177,10 +208,17 @@ export function arbolDeArchivos(raiz: string, inicio = '.', maxNivel = 4, maxEle
   return lineas.length ? lineas.join('\n') : '(carpeta vacía)';
 }
 
-function buscarEnArchivos(raiz: string, inicio: string, patron: string): { texto: string; total: number } {
+function buscarEnArchivos(
+  raiz: string,
+  inicio: string,
+  patron: string,
+): { texto: string; total: number } {
   // Validar el patrón antes de compilarlo para evitar ReDoS
   if (esRegexPeligroso(patron)) {
-    return { texto: 'Patrón de búsqueda demasiado complejo o peligroso. Usa una búsqueda más simple.', total: 0 };
+    return {
+      texto: 'Patrón de búsqueda demasiado complejo o peligroso. Usa una búsqueda más simple.',
+      total: 0,
+    };
   }
   let expresion: RegExp;
   try {
@@ -200,7 +238,10 @@ function buscarEnArchivos(raiz: string, inicio: string, patron: string): { texto
         }
       });
   });
-  return { texto: hallazgos.length ? hallazgos.join('\n') : 'Sin coincidencias.', total: hallazgos.length };
+  return {
+    texto: hallazgos.length ? hallazgos.join('\n') : 'Sin coincidencias.',
+    total: hallazgos.length,
+  };
 }
 
 /** Ejecuta un comando de terminal sin bloquear la interfaz. */
@@ -228,10 +269,14 @@ export function ejecutarComando(
     const detener = (razon: string): void => {
       motivo = razon;
       if (hijo.pid === undefined) return;
-      if (esWindows) spawnSync('taskkill', ['/pid', String(hijo.pid), '/t', '/f'], { windowsHide: true });
+      if (esWindows)
+        spawnSync('taskkill', ['/pid', String(hijo.pid), '/t', '/f'], { windowsHide: true });
       else hijo.kill('SIGKILL');
     };
-    const reloj = setTimeout(() => detener(`se detuvo después de ${Math.round(limite / 1000)} s`), limite);
+    const reloj = setTimeout(
+      () => detener(`se detuvo después de ${Math.round(limite / 1000)} s`),
+      limite,
+    );
     const alAbortar = (): void => detener('interrumpido por el usuario');
     op.senal?.addEventListener('abort', alAbortar, { once: true });
     let terminado = false;
@@ -244,7 +289,11 @@ export function ejecutarComando(
       const estado = error ? `error: ${error.message}` : motivo || `código de salida ${codigo}`;
       const ok = !error && !motivo && codigo === 0;
       const ultimas = texto.split('\n').slice(-4).join('\n');
-      resolver({ ok, salida: `[${estado}]\n${recortar(texto)}`, resumen: `${ok ? 'Terminó bien' : 'Falló'} (${estado})\n${ultimas}` });
+      resolver({
+        ok,
+        salida: `[${estado}]\n${recortar(texto)}`,
+        resumen: `${ok ? 'Terminó bien' : 'Falló'} (${estado})\n${ultimas}`,
+      });
     };
     hijo.on('error', (e) => finalizar(null, e));
     hijo.on('close', (codigo) => finalizar(codigo));
@@ -255,20 +304,30 @@ function lineasDeDiferencia(signo: '+' | '-', texto: string): LineaDiferencia[] 
   return texto.split('\n').map((t) => ({ signo, texto: t }));
 }
 
-const BLOQUEADO_EN_PLANEACION = 'Estás en la fase de planeación: todavía no puedes modificar archivos ni ejecutar comandos. Presenta tu plan con la acción plan.';
+const BLOQUEADO_EN_PLANEACION =
+  'Estás en la fase de planeación: todavía no puedes modificar archivos ni ejecutar comandos. Presenta tu plan con la acción plan.';
 
-export async function ejecutarAccion(accion: Accion, ctx: ContextoHerramientas, senal?: AbortSignal): Promise<ResultadoHerramienta> {
+export async function ejecutarAccion(
+  accion: Accion,
+  ctx: ContextoHerramientas,
+  senal?: AbortSignal,
+): Promise<ResultadoHerramienta> {
   try {
     switch (accion.tipo) {
       case 'leer': {
         const absoluta = rutaSegura(ctx.raiz, accion.ruta);
-        if (!existsSync(absoluta)) return { ok: false, salida: `No existe: ${accion.ruta}`, resumen: 'No existe' };
+        if (!existsSync(absoluta))
+          return { ok: false, salida: `No existe: ${accion.ruta}`, resumen: 'No existe' };
         if (statSync(absoluta).isDirectory()) {
           const arbol = arbolDeArchivos(ctx.raiz, accion.ruta);
           return { ok: true, salida: arbol, resumen: `${arbol.split('\n').length} elementos` };
         }
         const contenido = readFileSync(absoluta, 'utf8');
-        return { ok: true, salida: recortar(contenido, 20000), resumen: `Leí ${contenido.split('\n').length} líneas` };
+        return {
+          ok: true,
+          salida: recortar(contenido, 20000),
+          resumen: `Leí ${contenido.split('\n').length} líneas`,
+        };
       }
       case 'listar': {
         const arbol = arbolDeArchivos(ctx.raiz, accion.ruta);
@@ -276,12 +335,26 @@ export async function ejecutarAccion(accion: Accion, ctx: ContextoHerramientas, 
       }
       case 'buscar': {
         const r = buscarEnArchivos(ctx.raiz, accion.ruta, accion.patron);
-        return { ok: true, salida: r.texto, resumen: `${r.total} coincidencia${r.total === 1 ? '' : 's'}` };
+        return {
+          ok: true,
+          salida: r.texto,
+          resumen: `${r.total} coincidencia${r.total === 1 ? '' : 's'}`,
+        };
       }
       case 'escribir': {
-        if (ctx.soloLectura) return { ok: false, salida: BLOQUEADO_EN_PLANEACION, resumen: 'Bloqueado en la planeación' };
+        if (ctx.soloLectura)
+          return {
+            ok: false,
+            salida: BLOQUEADO_EN_PLANEACION,
+            resumen: 'Bloqueado en la planeación',
+          };
         const absoluta = rutaSegura(ctx.raiz, accion.ruta);
-        if (esProtegida(ctx, absoluta)) return { ok: false, salida: `Archivo protegido, no se puede modificar: ${accion.ruta}`, resumen: 'Archivo protegido' };
+        if (esProtegida(ctx, absoluta))
+          return {
+            ok: false,
+            salida: `Archivo protegido, no se puede modificar: ${accion.ruta}`,
+            resumen: 'Archivo protegido',
+          };
         const existia = existsSync(absoluta);
         mkdirSync(dirname(absoluta), { recursive: true });
         writeFileSync(absoluta, accion.contenido);
@@ -295,12 +368,31 @@ export async function ejecutarAccion(accion: Accion, ctx: ContextoHerramientas, 
         };
       }
       case 'editar': {
-        if (ctx.soloLectura) return { ok: false, salida: BLOQUEADO_EN_PLANEACION, resumen: 'Bloqueado en la planeación' };
+        if (ctx.soloLectura)
+          return {
+            ok: false,
+            salida: BLOQUEADO_EN_PLANEACION,
+            resumen: 'Bloqueado en la planeación',
+          };
         const absoluta = rutaSegura(ctx.raiz, accion.ruta);
-        if (esProtegida(ctx, absoluta)) return { ok: false, salida: `Archivo protegido, no se puede modificar: ${accion.ruta}`, resumen: 'Archivo protegido' };
-        if (!existsSync(absoluta)) return { ok: false, salida: `No existe: ${accion.ruta}. Usa escribir para crearlo.`, resumen: 'No existe' };
+        if (esProtegida(ctx, absoluta))
+          return {
+            ok: false,
+            salida: `Archivo protegido, no se puede modificar: ${accion.ruta}`,
+            resumen: 'Archivo protegido',
+          };
+        if (!existsSync(absoluta))
+          return {
+            ok: false,
+            salida: `No existe: ${accion.ruta}. Usa escribir para crearlo.`,
+            resumen: 'No existe',
+          };
         if (accion.bloques.length === 0) {
-          return { ok: false, salida: 'La acción editar no tiene bloques BUSCAR/REEMPLAZAR válidos.', resumen: 'Edición mal formada' };
+          return {
+            ok: false,
+            salida: 'La acción editar no tiene bloques BUSCAR/REEMPLAZAR válidos.',
+            resumen: 'Edición mal formada',
+          };
         }
         let contenido = readFileSync(absoluta, 'utf8');
         const fallidos: number[] = [];
@@ -318,7 +410,10 @@ export async function ejecutarAccion(accion: Accion, ctx: ContextoHerramientas, 
         }
         writeFileSync(absoluta, contenido);
         ctx.cambiados.add(rutaRelativa(ctx.raiz, absoluta));
-        const diferencias = accion.bloques.flatMap((b) => [...lineasDeDiferencia('-', b.buscar), ...lineasDeDiferencia('+', b.reemplazar)]);
+        const diferencias = accion.bloques.flatMap((b) => [
+          ...lineasDeDiferencia('-', b.buscar),
+          ...lineasDeDiferencia('+', b.reemplazar),
+        ]);
         const agregadas = diferencias.filter((d) => d.signo === '+').length;
         const quitadas = diferencias.length - agregadas;
         return {
@@ -329,22 +424,31 @@ export async function ejecutarAccion(accion: Accion, ctx: ContextoHerramientas, 
         };
       }
       case 'ejecutar': {
-        if (ctx.soloLectura) return { ok: false, salida: BLOQUEADO_EN_PLANEACION, resumen: 'Bloqueado en la planeación' };
+        if (ctx.soloLectura)
+          return {
+            ok: false,
+            salida: BLOQUEADO_EN_PLANEACION,
+            resumen: 'Bloqueado en la planeación',
+          };
         // Bloquear comandos peligrosos incluso con autoAprobar activado
         if (esComandoPeligroso(accion.comando)) {
           return {
             ok: false,
-            salida: 'Este comando parece peligroso y requiere aprobación explícita incluso con autoAprobar activado.',
+            salida:
+              'Este comando parece peligroso y requiere aprobación explícita incluso con autoAprobar activado.',
             resumen: 'Comando peligroso bloqueado',
           };
         }
         if (!ctx.autoAprobar) {
-          const opciones = ctx.permitirSiempre ? ['Sí', 'Sí, y no volver a preguntar en esta sesión', 'No'] : ['Sí', 'No'];
+          const opciones = ctx.permitirSiempre
+            ? ['Sí', 'Sí, y no volver a preguntar en esta sesión', 'No']
+            : ['Sí', 'No'];
           const eleccion = await ctx.ui.elegir('¿Ejecuto este comando?', opciones, accion.comando);
           if (eleccion < 0 || opciones[eleccion] === 'No') {
             return {
               ok: false,
-              salida: 'El usuario no autorizó este comando. Pregúntale qué prefiere o resuélvelo de otra forma.',
+              salida:
+                'El usuario no autorizó este comando. Pregúntale qué prefiere o resuélvelo de otra forma.',
               resumen: 'No autorizado',
             };
           }
@@ -355,9 +459,18 @@ export async function ejecutarAccion(accion: Accion, ctx: ContextoHerramientas, 
       }
       case 'equipo': {
         const inventario = ctx.equipo();
-        if (!inventario) return { ok: false, salida: 'Todavía no tengo el inventario del equipo.', resumen: 'Sin inventario' };
+        if (!inventario)
+          return {
+            ok: false,
+            salida: 'Todavía no tengo el inventario del equipo.',
+            resumen: 'Sin inventario',
+          };
         const r = buscarEnEquipo(inventario, accion.buscar);
-        return { ok: true, salida: r.texto, resumen: `${r.total} resultado${r.total === 1 ? '' : 's'}` };
+        return {
+          ok: true,
+          salida: r.texto,
+          resumen: `${r.total} resultado${r.total === 1 ? '' : 's'}`,
+        };
       }
       default:
         return { ok: true, salida: '', resumen: '' };

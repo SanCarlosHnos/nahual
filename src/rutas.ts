@@ -24,7 +24,11 @@ export function carpetaTrabajoInicial(carpetaProyectos: string): string {
 
 /** Rutas (relativas a RAIZ) que Nahual nunca puede modificar al mejorarse. Las define el núcleo protegido. */
 export const PROTEGIDOS: string[] = (
-  JSON.parse(readFileSync(join(RAIZ, 'nucleo', 'proteccion.json'), 'utf8')) as { protegidos: string[] }
+  JSON.parse(readFileSync(join(RAIZ, 'nucleo', 'proteccion.json'), 'utf8')) as {
+    protegidos: string[];
+  }
 ).protegidos;
 
-export const VERSION: string = (JSON.parse(readFileSync(join(RAIZ, 'package.json'), 'utf8')) as { version: string }).version;
+export const VERSION: string = (
+  JSON.parse(readFileSync(join(RAIZ, 'package.json'), 'utf8')) as { version: string }
+).version;

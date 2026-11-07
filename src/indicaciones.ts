@@ -98,8 +98,14 @@ export function ejemploDeTrabajo(): Mensaje[] {
         '[EJEMPLO DE ENTRENAMIENTO: muestra la forma correcta de trabajar; no es parte de la tarea real]\n' +
         'Agrega a mi página un formulario de contacto que valide el correo.',
     },
-    { role: 'assistant', content: `Primero reviso qué archivos tiene el proyecto.\n${abrir('listar')} ruta="."/>` },
-    { role: 'user', content: 'RESULTADOS:\n\n### Listar(.) → bien\nindex.html\napp.js\nestilos.css' },
+    {
+      role: 'assistant',
+      content: `Primero reviso qué archivos tiene el proyecto.\n${abrir('listar')} ruta="."/>`,
+    },
+    {
+      role: 'user',
+      content: 'RESULTADOS:\n\n### Listar(.) → bien\nindex.html\napp.js\nestilos.css',
+    },
     {
       role: 'assistant',
       content:
@@ -184,7 +190,10 @@ ${AVISO_EJEMPLO}
 `;
 }
 
-export function indicacionesDeMejora(raiz: string = RAIZ, ctx: ContextoIndicaciones = { equipo: '', memoria: '' }): string {
+export function indicacionesDeMejora(
+  raiz: string = RAIZ,
+  ctx: ContextoIndicaciones = { equipo: '', memoria: '' },
+): string {
   const rutaAdn = join(raiz, 'ADN.md');
   const adn = existsSync(rutaAdn) ? readFileSync(rutaAdn, 'utf8') : '(ADN.md no existe)';
   return `${IDENTIDAD}

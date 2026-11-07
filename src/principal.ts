@@ -70,7 +70,10 @@ async function main(): Promise<void> {
       });
     }
   } catch {
-    ui.emitir({ tipo: 'aviso', texto: `No pude contactar con Ollama en ${cfg.urlOllama}. Ábrelo antes de pedirme algo.` });
+    ui.emitir({
+      tipo: 'aviso',
+      texto: `No pude contactar con Ollama en ${cfg.urlOllama}. Ábrelo antes de pedirme algo.`,
+    });
   }
   if (!equipoVigente(estado.equipo)) {
     recolectarEquipo()
@@ -95,7 +98,11 @@ async function main(): Promise<void> {
           ui.emitir({ tipo: 'aviso', texto: `No conozco el comando /${nombre}. Escribe /ayuda.` });
           continue;
         }
-        const resultado = await comando.ejecutar({ estado, argumentos: resto.join(' ').trim(), senal: controlador.signal });
+        const resultado = await comando.ejecutar({
+          estado,
+          argumentos: resto.join(' ').trim(),
+          senal: controlador.signal,
+        });
         if (resultado === 'salir') break;
         if (resultado === 'reiniciar' || resultado === 'mejorar') {
           ui.cerrar();
@@ -107,8 +114,16 @@ async function main(): Promise<void> {
       const intencion = await clasificarIntencion(cfg, linea, controlador.signal);
       if (intencion === 'mejora') {
         const comando = buscarComando('mejorar')!;
-        ui.emitir({ tipo: 'info', texto: 'Entiendo que quieres que me mejore a mí mismo. Prepararé un plan para que lo apruebes.' });
-        const resultado = await comando.ejecutar({ estado, argumentos: linea, senal: controlador.signal });
+        ui.emitir({
+          tipo: 'info',
+          texto:
+            'Entiendo que quieres que me mejore a mí mismo. Prepararé un plan para que lo apruebes.',
+        });
+        const resultado = await comando.ejecutar({
+          estado,
+          argumentos: linea,
+          senal: controlador.signal,
+        });
         if (resultado === 'mejorar') {
           ui.cerrar();
           process.exit(CODIGO_MEJORA);
@@ -117,12 +132,22 @@ async function main(): Promise<void> {
       }
 
       if (!estado.agente) {
-        const contexto = { equipo: resumenEquipo(estado.equipo, modelos), memoria: leerMemoria(), creativas: leerCapacidadesCreativas() };
-        estado.agente = new Agente(cfg, indicacionesDeTareas(estado.carpeta, contexto), crearContextoTarea(estado), 'tarea');
+        const contexto = {
+          equipo: resumenEquipo(estado.equipo, modelos),
+          memoria: leerMemoria(),
+          creativas: leerCapacidadesCreativas(),
+        };
+        estado.agente = new Agente(
+          cfg,
+          indicacionesDeTareas(estado.carpeta, contexto),
+          crearContextoTarea(estado),
+          'tarea',
+        );
       }
       estado.agente.ctx.autoAprobar = cfg.autoAprobar;
       const resultado = await estado.agente.ejecutar(linea, { senal: controlador.signal });
-      if (!resultado.terminado && resultado.resumen) ui.emitir({ tipo: 'aviso', texto: resultado.resumen });
+      if (!resultado.terminado && resultado.resumen)
+        ui.emitir({ tipo: 'aviso', texto: resultado.resumen });
     } catch (e) {
       if (controlador.signal.aborted) ui.emitir({ tipo: 'aviso', texto: 'Interrumpido.' });
       else ui.emitir({ tipo: 'error', texto: (e as Error).message });

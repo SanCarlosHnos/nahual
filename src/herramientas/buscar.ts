@@ -6,19 +6,31 @@ import { crearTool } from '../servicios/tool';
 import { existsSync, readFileSync, statSync } from 'node:fs';
 import { join, sep } from 'node:path';
 
-const IGNORADOS = new Set(['node_modules', '.git', 'dist', 'build', '.next', '.venv', '__pycache__', 'target', 'coverage', '.taller']);
-const BINARIOS = /\.(png|jpe?g|gif|webp|ico|pdf|zip|gz|exe|dll|woff2?|ttf|mp[34]|wav|lock|sqlite|db)$/i;
+const IGNORADOS = new Set([
+  'node_modules',
+  '.git',
+  'dist',
+  'build',
+  '.next',
+  '.venv',
+  '__pycache__',
+  'target',
+  'coverage',
+  '.taller',
+]);
+const BINARIOS =
+  /\.(png|jpe?g|gif|webp|ico|pdf|zip|gz|exe|dll|woff2?|ttf|mp[34]|wav|lock|sqlite|db)$/i;
 
 function esRegexPeligroso(patron: string): boolean {
-  const patronesPeligrosos = [
-    /\([^)]*[+*][^)]*\)[+*]/,
-    /\(\.\*\)\{/,
-    /\([^)]*\|[^)]*\)[+*]/,
-  ];
+  const patronesPeligrosos = [/\([^)]*[+*][^)]*\)[+*]/, /\(\.\*\)\{/, /\([^)]*\|[^)]*\)[+*]/];
   return patronesPeligrosos.some((p) => p.test(patron));
 }
 
-function recorrer(carpeta: string, visitar: (absoluta: string, esCarpeta: boolean, nivel: number) => boolean | void, nivel = 0): void {
+function recorrer(
+  carpeta: string,
+  visitar: (absoluta: string, esCarpeta: boolean, nivel: number) => boolean | void,
+  nivel = 0,
+): void {
   let nombres: string[];
   try {
     nombres = require('node:fs').readdirSync(carpeta).sort();
@@ -39,18 +51,25 @@ function recorrer(carpeta: string, visitar: (absoluta: string, esCarpeta: boolea
   }
 }
 
-function buscarEnArchivos(raiz: string, inicio: string, patron: string): { texto: string; total: number } {
+function buscarEnArchivos(
+  raiz: string,
+  inicio: string,
+  patron: string,
+): { texto: string; total: number } {
   if (esRegexPeligroso(patron)) {
-    return { texto: 'Patrón de búsqueda demasiado complejo o peligroso. Usa una búsqueda más simple.', total: 0 };
+    return {
+      texto: 'Patrón de búsqueda demasiado complejo o peligroso. Usa una búsqueda más simple.',
+      total: 0,
+    };
   }
-  
+
   let expresion: RegExp;
   try {
     expresion = new RegExp(patron, 'i');
   } catch {
     expresion = new RegExp(patron.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'i');
   }
-  
+
   const hallazgos: string[] = [];
   recorrer(rutaSegura(raiz, inicio), (absoluta, esCarpeta) => {
     if (esCarpeta || BINARIOS.test(absoluta) || hallazgos.length >= 60) return;
@@ -64,8 +83,11 @@ function buscarEnArchivos(raiz: string, inicio: string, patron: string): { texto
         }
       });
   });
-  
-  return { texto: hallazgos.length ? hallazgos.join('\n') : 'Sin coincidencias.', total: hallazgos.length };
+
+  return {
+    texto: hallazgos.length ? hallazgos.join('\n') : 'Sin coincidencias.',
+    total: hallazgos.length,
+  };
 }
 
 const schema = z.object({
@@ -79,10 +101,10 @@ export const toolBuscar = crearTool(
   schema,
   async (params, ctx) => {
     const r = buscarEnArchivos(ctx.raiz, params.ruta, params.patron);
-    return { 
-      ok: true, 
-      resumen: `${r.total} coincidencia${r.total === 1 ? '' : 's'}`, 
-      salida: r.texto 
+    return {
+      ok: true,
+      resumen: `${r.total} coincidencia${r.total === 1 ? '' : 's'}`,
+      salida: r.texto,
     };
-  }
+  },
 );

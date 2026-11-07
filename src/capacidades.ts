@@ -10,7 +10,7 @@ const ARCHIVO = join(DIR_DATOS, 'herramientas-creativas.md');
 export function leerCapacidadesCreativas(): string {
   if (!existsSync(ARCHIVO)) return '';
   try {
-    return readFileSync(ARCHIVO, 'utf8').replace(/^﻿/, '').trim();
+    return readFileSync(ARCHIVO, 'utf8').replace(/^FEFF/, '').trim();
   } catch {
     return '';
   }

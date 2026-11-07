@@ -11,7 +11,9 @@ const EXPERIENCIAS = join(DIR_DATOS, 'experiencias');
 
 export function leerMemoria(maxLineas = 40): string {
   if (!existsSync(MEMORIA)) return '';
-  const lineas = readFileSync(MEMORIA, 'utf8').split('\n').filter((l) => l.trim());
+  const lineas = readFileSync(MEMORIA, 'utf8')
+    .split('\n')
+    .filter((l) => l.trim());
   return lineas.slice(-maxLineas).join('\n');
 }
 
@@ -44,7 +46,10 @@ export function guardarExperiencia(modo: string, mensajes: Mensaje[]): void {
   try {
     mkdirSync(EXPERIENCIAS, { recursive: true });
     const fecha = new Date().toISOString();
-    appendFileSync(join(EXPERIENCIAS, `${fecha.slice(0, 10)}.jsonl`), JSON.stringify({ fecha, modo, mensajes }) + '\n');
+    appendFileSync(
+      join(EXPERIENCIAS, `${fecha.slice(0, 10)}.jsonl`),
+      JSON.stringify({ fecha, modo, mensajes }) + '\n',
+    );
   } catch {
     // registrar experiencias nunca debe interrumpir el trabajo
   }
