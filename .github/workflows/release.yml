@@ -61,7 +61,11 @@ jobs:
           
           ## Instalación
           
-          ### Portable (recomendado)
+          ### Instalador (recomendado)
+          Descarga `Nahual-Setup-${{ steps.get_version.outputs.VERSION }}.exe` y ejecútalo.
+          Crea accesos directos en el escritorio y menú Inicio.
+          
+          ### Portable
           Descarga `Nahual-Portable-${{ steps.get_version.outputs.VERSION }}.exe` y ejecútalo directamente.
           No requiere instalación.
           

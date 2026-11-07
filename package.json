@@ -21,7 +21,8 @@
     "format:check": "prettier --check \"src/**/*.ts\" \"tests/**/*.ts\"",
     "autopruebas": "tsx src/autopruebas.ts",
     "verificar": "node nucleo/verificar.mjs .",
-    "build": "electron-builder --win portable",
+    "build": "electron-builder --win",
+    "build:portable": "electron-builder --win portable",
     "build:installer": "electron-builder --win nsis"
   },
   "dependencies": {
@@ -49,7 +50,8 @@
     "appId": "com.nahual.app",
     "productName": "Nahual",
     "directories": {
-      "output": "dist"
+      "output": "dist",
+      "buildResources": "build"
     },
     "files": [
       "electron/**/*",
@@ -63,14 +65,28 @@
       "!tests/**"
     ],
     "win": {
+      "icon": "build/icon.ico",
       "target": [
         {
+          "target": "nsis",
+          "arch": ["x64"]
+        },
+        {
           "target": "portable",
-          "arch": [
-            "x64"
-          ]
+          "arch": ["x64"]
         }
       ]
+    },
+    "nsis": {
+      "oneClick": false,
+      "perMachine": true,
+      "allowToChangeInstallationDirectory": true,
+      "createDesktopShortcut": true,
+      "createStartMenuShortcut": true,
+      "shortcutName": "Nahual",
+      "artifactName": "Nahual-Setup-${version}.exe",
+      "installerIcon": "build/icon.ico",
+      "uninstallerIcon": "build/icon.ico"
     },
     "portable": {
       "artifactName": "Nahual-Portable-${version}.exe"

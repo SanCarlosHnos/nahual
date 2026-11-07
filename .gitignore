@@ -5,4 +5,4 @@ config.json
 *.log
 coverage/
 dist/
-build/
+dist2/

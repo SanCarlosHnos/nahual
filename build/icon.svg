@@ -1,0 +1,35 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" width="256" height="256">
+  <defs>
+    <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#0f172a"/>
+      <stop offset="100%" style="stop-color:#1e293b"/>
+    </linearGradient>
+    <linearGradient id="glow" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#06b6d4"/>
+      <stop offset="100%" style="stop-color:#8b5cf6"/>
+    </linearGradient>
+  </defs>
+  <!-- Background -->
+  <rect width="256" height="256" rx="48" fill="url(#bg)"/>
+  <!-- Jaguar ears -->
+  <path d="M 72 68 L 88 44 L 104 68 Z" fill="url(#glow)" opacity="0.9"/>
+  <path d="M 152 68 L 168 44 L 184 68 Z" fill="url(#glow)" opacity="0.9"/>
+  <!-- Jaguar head outline -->
+  <path d="M 128 56 C 80 56 56 92 56 128 C 56 168 88 200 128 200 C 168 200 200 168 200 128 C 200 92 176 56 128 56 Z" fill="none" stroke="url(#glow)" stroke-width="6" opacity="0.8"/>
+  <!-- Eyes -->
+  <ellipse cx="100" cy="116" rx="14" ry="10" fill="#06b6d4"/>
+  <ellipse cx="156" cy="116" rx="14" ry="10" fill="#06b6d4"/>
+  <ellipse cx="100" cy="116" rx="6" ry="8" fill="#0f172a"/>
+  <ellipse cx="156" cy="116" rx="6" ry="8" fill="#0f172a"/>
+  <!-- Nose -->
+  <path d="M 120 140 L 128 148 L 136 140 Z" fill="#8b5cf6"/>
+  <!-- Code brackets as whiskers -->
+  <path d="M 68 148 L 56 160 L 68 172" fill="none" stroke="#06b6d4" stroke-width="4" stroke-linecap="round" opacity="0.7"/>
+  <path d="M 188 148 L 200 160 L 188 172" fill="none" stroke="#06b6d4" stroke-width="4" stroke-linecap="round" opacity="0.7"/>
+  <!-- Mouth / code underscore -->
+  <path d="M 108 164 Q 128 176 148 164" fill="none" stroke="#8b5cf6" stroke-width="3" stroke-linecap="round" opacity="0.8"/>
+  <!-- Circuit dots -->
+  <circle cx="76" cy="188" r="3" fill="#06b6d4" opacity="0.5"/>
+  <circle cx="180" cy="188" r="3" fill="#06b6d4" opacity="0.5"/>
+  <circle cx="128" cy="212" r="3" fill="#8b5cf6" opacity="0.5"/>
+</svg>
