@@ -116,19 +116,37 @@ El proyecto requiere un mínimo de **80% de cobertura** en:
 
 Los reportes de coverage se generan automáticamente en el CI/CD y están disponibles como artefactos descargables.
 
-### Crear un release
+### Build local
 
-Para crear una nueva versión:
+Para compilar el ejecutable portable de Windows:
 
 ```bash
-git tag v0.6.0
-git push origin v0.6.0
+npm run build               # Genera dist/Nahual-Portable-{version}.exe
+npm run build:installer     # Genera instalador NSIS (opcional)
 ```
 
-Esto automáticamente:
-- Ejecuta todos los tests
-- Crea un release en GitHub con notas
-- Adjunta artefactos de build
+Requisitos: Windows 10/11 x64, Node.js 20+. El build usa **electron-builder** y produce un `.exe` portable (~110 MB) que no requiere instalación.
+
+### Crear un release
+
+Para publicar una nueva versión:
+
+```bash
+git tag -a v0.8.0 -m "Descripción de la versión"
+git push origin v0.8.0
+```
+
+El workflow de release (`release.yml`) automáticamente:
+
+1. Ejecuta tests y verificación completa
+2. Sincroniza la versión del tag en `package.json`
+3. Compila el ejecutable portable con electron-builder
+4. Crea el release en GitHub con el `.exe` adjunto
+5. Hace commit a `master` con la versión actualizada (`[skip ci]`)
+
+No es necesario actualizar `package.json` manualmente; el workflow lo sincroniza con el tag.
+
+Los releases están en [github.com/SanCarlosHnos/nahual/releases](https://github.com/SanCarlosHnos/nahual/releases).
 
 ## Desinstalar
 
