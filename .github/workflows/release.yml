@@ -89,8 +89,9 @@ jobs:
       run: |
         git config user.name "github-actions[bot]"
         git config user.email "github-actions[bot]@users.noreply.github.com"
-        git checkout master
+        git fetch origin master
+        git checkout -B master origin/master
         npm version ${{ steps.get_version.outputs.VERSION }} --no-git-tag-version
         git add package.json package-lock.json
-        git commit -m "chore: bump version to ${{ steps.get_version.outputs.VERSION }} [skip ci]"
+        git diff --cached --quiet && echo "Version already synced" || git commit -m "chore: bump version to ${{ steps.get_version.outputs.VERSION }} [skip ci]"
         git push origin master
