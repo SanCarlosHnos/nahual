@@ -36,7 +36,14 @@ jobs:
     
     - name: Get version from tag
       id: get_version
-      run: echo "VERSION=${GITHUB_REF#refs/tags/}" >> $GITHUB_OUTPUT
+      shell: bash
+      run: |
+        VERSION=${GITHUB_REF#refs/tags/v}
+        echo "VERSION=$VERSION" >> $GITHUB_OUTPUT
+        echo "TAG=v$VERSION" >> $GITHUB_OUTPUT
+    
+    - name: Set package version
+      run: npm version ${{ steps.get_version.outputs.VERSION }} --no-git-tag-version
     
     - name: Build Electron app
       run: npm run build
@@ -44,23 +51,21 @@ jobs:
         GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
     
     - name: Create Release and Upload Assets
-      uses: softprops/action-gh-release@v2
+      uses: softprops/action-gh-release@v3
       with:
-        name: Nahual ${{ steps.get_version.outputs.VERSION }}
+        name: Nahual ${{ steps.get_version.outputs.TAG }}
         body: |
           ## Cambios en esta versión
           
-          Ver el [changelog completo](https://github.com/${{ github.repository }}/commits/${{ steps.get_version.outputs.VERSION }}).
+          Ver el [changelog completo](https://github.com/${{ github.repository }}/commits/${{ steps.get_version.outputs.TAG }}).
           
           ## Instalación
           
-          ### Opción 1: Instalador (recomendado)
-          Descarga `Nahual-Setup-${{ steps.get_version.outputs.VERSION }}.exe` y ejecútalo.
-          
-          ### Opción 2: Portable
+          ### Portable (recomendado)
           Descarga `Nahual-Portable-${{ steps.get_version.outputs.VERSION }}.exe` y ejecútalo directamente.
+          No requiere instalación.
           
-          ### Opción 3: Desde código fuente
+          ### Desde código fuente
           ```bash
           git clone https://github.com/${{ github.repository }}.git
           cd nahual
@@ -76,7 +81,5 @@ jobs:
         prerelease: false
         files: |
           dist/*.exe
-          dist/*.zip
-          dist/*.msi
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
