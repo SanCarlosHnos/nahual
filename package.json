@@ -31,8 +31,6 @@
     "@babel/preset-typescript": "^8.0.7",
     "@eslint/js": "^10.0.1",
     "@types/node": "^26.6.6",
-    "@typescript-eslint/eslint-plugin": "^8.72.1",
-    "@typescript-eslint/parser": "^8.72.1",
     "@vitest/coverage-v8": "^5.1.0",
     "electron": "^45.2.3",
     "eslint": "^10.14.0",
@@ -40,7 +38,6 @@
     "eslint-plugin-prettier": "^5.5.7",
     "prettier": "^3.9.10",
     "typescript": "^7.0.2",
-    "typescript-eslint": "^8.72.1",
     "vite": "^8.3.6",
     "vitest": "^5.1.0"
   }
