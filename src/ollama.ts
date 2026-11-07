@@ -56,7 +56,13 @@ export async function conversar(cfg: Config, mensajes: Mensaje[], op: OpcionesCo
       const linea = pendiente.slice(0, salto).trim();
       pendiente = pendiente.slice(salto + 1);
       if (!linea) continue;
-      const datos = JSON.parse(linea) as { message?: { content?: string }; error?: string };
+      let datos: { message?: { content?: string }; error?: string };
+      try {
+        datos = JSON.parse(linea) as { message?: { content?: string }; error?: string };
+      } catch {
+        // Línea mal formada: continuar con la siguiente en lugar de interrumpir toda la conversación
+        continue;
+      }
       if (datos.error) throw new Error(`Ollama: ${datos.error}`);
       const fragmento = datos.message?.content ?? '';
       if (fragmento) {

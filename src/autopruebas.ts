@@ -9,7 +9,7 @@ import { quitarNoProsa, revisarIdioma } from './idioma';
 import { abrir, cerrar, ejemploDeTrabajo, indicacionesDeMejora, indicacionesDeTareas } from './indicaciones';
 import { interpretarClasificacion } from './intencion';
 import { textoModelfile } from './modelo';
-import { analizarAcciones, describirAccion, extraerTexto } from './protocolo';
+import { analizarAcciones, describirAccion, extraerTexto, huellaAcciones } from './protocolo';
 import { aplicarEdicion, rutaSegura } from './herramientas';
 import { crearInterfazGrafica, PREFIJO } from './interfaz/grafica';
 import { PROTEGIDOS, RAIZ } from './rutas';
@@ -75,11 +75,35 @@ comprobar('ignora bloques de razonamiento', analizarAcciones('<think><leer ruta=
 comprobar('extraerTexto quita las acciones', extraerTexto('hola <leer ruta="x"/> mundo').includes('hola') && !extraerTexto('hola <leer ruta="x"/>').includes('leer'));
 comprobar('describirAccion da nombre en español', describirAccion(acciones[0]!).nombre === 'Listar');
 
+// Huella de acciones: la repetición debe verse aunque el contenido cambie
+const escribirTexto = (texto: string) => analizarAcciones('<escribir ruta="a.ts">' + texto + c('escribir'));
+comprobar('la huella ignora el contenido escrito', huellaAcciones(escribirTexto('uno')) === huellaAcciones(escribirTexto('dos')));
+comprobar(
+  'la huella distingue rutas distintas',
+  huellaAcciones(analizarAcciones('<leer ruta="a.ts"/>')) !== huellaAcciones(analizarAcciones('<leer ruta="b.ts"/>')),
+);
+comprobar(
+  'la huella incluye hecho y terminar',
+  huellaAcciones(analizarAcciones('<hecho paso="1"/>')) === 'hecho 1' &&
+    huellaAcciones(analizarAcciones('<terminar>listo' + c('terminar'))) === 'terminar',
+);
+const soloLeer = analizarAcciones('<leer ruta="a.ts"/>');
+const leerYEditar = analizarAcciones(
+  '<leer ruta="a.ts"/><editar ruta="a.ts">' + `${men7} BUSCAR\nx\n=======\ny\n${may7} REEMPLAZAR` + c('editar'),
+);
+comprobar('la huella distingue el ciclo leer+editar del solo leer', huellaAcciones(leerYEditar) !== huellaAcciones(soloLeer));
+comprobar('sin acciones no hay huella', huellaAcciones([]) === '');
+
 // Edición
 comprobar('aplicarEdicion exacto', aplicarEdicion('a\nb\nc', 'b', 'B') === 'a\nB\nc');
 comprobar('aplicarEdicion tolera sangría', aplicarEdicion('  if (x) {\n    y();\n  }', 'if (x) {\ny();', 'if (z) {\n    w();') === 'if (z) {\n    w();\n  }');
 comprobar('aplicarEdicion conserva CRLF', aplicarEdicion('a\r\nb', 'b', 'c') === 'a\r\nc');
 comprobar('aplicarEdicion falla si no encaja', aplicarEdicion('abc', 'zzz', 'y') === null);
+// Edición difusa ambigua: múltiples coincidencias deben reportar ambigüedad
+comprobar(
+  'aplicarEdicion rechaza coincidencia ambigua',
+  aplicarEdicion('function a() {\n  return 1;\n}\nfunction b() {\n  return 1;\n}', 'return 1;', 'return 2;') === null,
+);
 
 // Seguridad de rutas
 let escapo = false;
@@ -100,6 +124,20 @@ comprobar('quitarNoProsa quita rutas', !quitarNoProsa('mira el archivo src/app.t
 // Intención
 comprobar('clasificación entiende MEJORA', interpretarClasificacion('MEJORA') === 'mejora');
 comprobar('clasificación entiende TAREA', interpretarClasificacion('la respuesta es TAREA') === 'tarea');
+// Clasificación con negaciones: debe ignorar la intención negada
+comprobar(
+  'clasificación ignora MEJORA negada',
+  interpretarClasificacion('No es una MEJORA, es una TAREA') === 'tarea',
+);
+comprobar(
+  'clasificación ignora TAREA negada',
+  interpretarClasificacion('No es TAREA, es MEJORA') === 'mejora',
+);
+// Clasificación con múltiples palabras: debe elegir la primera aparición
+comprobar(
+  'clasificación elige la primera aparición',
+  interpretarClasificacion('CHARLA sobre MEJORA') === 'charla',
+);
 
 // Indicaciones y modelo
 comprobar('indicaciones de tareas en español', indicacionesDeTareas(RAIZ, { equipo: '', memoria: '' }).includes('español latinoamericano'));

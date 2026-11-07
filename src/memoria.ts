@@ -19,6 +19,24 @@ export function recordar(dato: string): void {
   const limpio = dato.replace(/\s+/g, ' ').trim();
   if (!limpio) return;
   mkdirSync(DIR_DATOS, { recursive: true });
+  // Verificar si el dato ya existe en las últimas entradas para evitar duplicados
+  if (existsSync(MEMORIA)) {
+    const contenido = readFileSync(MEMORIA, 'utf8');
+    const lineas = contenido.split('\n').filter((l) => l.trim());
+    // Buscar en las últimas 20 entradas si ya existe un dato similar
+    const recientes = lineas.slice(-20);
+    const yaExiste = recientes.some((linea) => {
+      // Extraer el dato de la línea (formato: "- dato (fecha)")
+      const match = linea.match(/^-\s+(.+?)\s+\(\d{4}-\d{2}-\d{2}\)$/);
+      if (match) {
+        const datoExistente = match[1];
+        // Comparar ignorando mayúsculas/minúsculas y espacios
+        return datoExistente.toLowerCase().replace(/\s+/g, ' ').trim() === limpio.toLowerCase();
+      }
+      return false;
+    });
+    if (yaExiste) return;
+  }
   appendFileSync(MEMORIA, `- ${limpio} (${new Date().toISOString().slice(0, 10)})\n`);
 }
 

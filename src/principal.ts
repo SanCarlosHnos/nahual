@@ -8,6 +8,7 @@ import type { Interfaz } from './interfaz/tipos';
 import { indicacionesDeTareas } from './indicaciones';
 import { clasificarIntencion } from './intencion';
 import { leerMemoria } from './memoria';
+import { leerCapacidadesCreativas } from './capacidades';
 import { listarModelos, modeloInstalado } from './ollama';
 import { carpetaTrabajoInicial, VERSION } from './rutas';
 
@@ -116,7 +117,7 @@ async function main(): Promise<void> {
       }
 
       if (!estado.agente) {
-        const contexto = { equipo: resumenEquipo(estado.equipo, modelos), memoria: leerMemoria() };
+        const contexto = { equipo: resumenEquipo(estado.equipo, modelos), memoria: leerMemoria(), creativas: leerCapacidadesCreativas() };
         estado.agente = new Agente(cfg, indicacionesDeTareas(estado.carpeta, contexto), crearContextoTarea(estado), 'tarea');
       }
       estado.agente.ctx.autoAprobar = cfg.autoAprobar;

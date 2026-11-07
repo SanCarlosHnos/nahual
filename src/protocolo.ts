@@ -145,8 +145,36 @@ export function describirAccion(a: Accion): DescripcionAccion {
   }
 }
 
-/** Huella de las acciones con efecto, para detectar cuando el modelo se queda repitiendo lo mismo. */
+/**
+ * Huella de las acciones para detectar cuando el modelo se queda repitiendo lo mismo.
+ * Compara el tipo y el objetivo, nunca el contenido: un espacio distinto en un archivo
+ * no debe disfrazar la repetición. Incluye hecho y terminar, que también pueden repetirse.
+ */
 export function huellaAcciones(acciones: Accion[]): string {
-  const relevantes = acciones.filter((a) => a.tipo !== 'terminar' && a.tipo !== 'hecho');
-  return relevantes.length ? JSON.stringify(relevantes) : '';
+  return acciones
+    .map((a): string => {
+      switch (a.tipo) {
+        case 'leer':
+        case 'listar':
+        case 'escribir':
+        case 'editar':
+          return `${a.tipo} ${a.ruta}`;
+        case 'buscar':
+          return `buscar ${a.patron} ${a.ruta}`;
+        case 'ejecutar':
+          return `ejecutar ${a.comando}`;
+        case 'hecho':
+          return `hecho ${a.paso}`;
+        case 'preguntar':
+          return `preguntar ${a.pregunta}`;
+        case 'recordar':
+          return `recordar ${a.dato}`;
+        case 'equipo':
+          return `equipo ${a.buscar}`;
+        case 'plan':
+        case 'terminar':
+          return a.tipo;
+      }
+    })
+    .join(' | ');
 }

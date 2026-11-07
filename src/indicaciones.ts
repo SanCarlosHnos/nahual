@@ -156,6 +156,8 @@ function seccion(titulo: string, contenido: string): string {
 export interface ContextoIndicaciones {
   equipo: string;
   memoria: string;
+  /** Catálogo de herramientas creativas del equipo (imagen, video, voz, 3D, IA). */
+  creativas?: string;
 }
 
 export function indicacionesDeTareas(carpeta: string, ctx: ContextoIndicaciones): string {
@@ -175,6 +177,7 @@ Contenido actual de la carpeta:
 ${arbolDeArchivos(carpeta, '.', 2, 150)}
 
 ${ctx.equipo}
+${seccion('Herramientas creativas de tu equipo (úsalas por terminal cuando ayuden: imagen, video, voz, 3D, IA)', ctx.creativas ?? '')}
 ${seccion('Tu memoria (lo que el usuario te pidió recordar y lecciones aprendidas)', ctx.memoria)}
 Si el usuario solo conversa o te hace una pregunta, respóndele en texto, sin acciones.
 ${AVISO_EJEMPLO}
@@ -213,6 +216,7 @@ ${adn}
 ${arbolDeArchivos(raiz, '.', 3, 200)}
 
 ${ctx.equipo}
+${seccion('Herramientas creativas de tu equipo', ctx.creativas ?? '')}
 ${seccion('Lecciones de mejoras anteriores y datos del usuario', ctx.memoria)}
 ${AVISO_EJEMPLO}
 `;

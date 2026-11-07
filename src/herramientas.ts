@@ -38,6 +38,7 @@ const IGNORADOS = new Set(['node_modules', '.git', 'dist', 'build', '.next', '.v
 const BINARIOS = /\.(png|jpe?g|gif|webp|ico|pdf|zip|gz|exe|dll|woff2?|ttf|mp[34]|wav|lock|sqlite|db)$/i;
 const MAX_SALIDA = 12000;
 const MAX_DIFERENCIAS = 24;
+const MAX_SALIDA_COMANDO = 1_000_000; // 1MB en lugar de 4MB para evitar consumo excesivo de memoria
 
 export function recortar(texto: string, maximo = MAX_SALIDA): string {
   if (texto.length <= maximo) return texto;
@@ -57,9 +58,36 @@ export function rutaRelativa(raiz: string, absoluta: string): string {
   return relative(raiz, absoluta).split(sep).join('/') || '.';
 }
 
+function esRegexPeligroso(patron: string): boolean {
+  // Detectar patrones que pueden causar backtracking catastrófico (ReDoS)
+  const patronesPeligrosos = [
+    /\([^)]*[+*][^)]*\)[+*]/, // (a+)+ o (a*)*
+    /\(\.\*\)\{/, // (.*){n}
+    /\([^)]*\|[^)]*\)[+*]/, // (a|b)+ con alternancias superpuestas
+  ];
+  return patronesPeligrosos.some((p) => p.test(patron));
+}
+
+function esComandoPeligroso(comando: string): boolean {
+  const comandosPeligrosos = [
+    /\b(rm|del)\s+(-rf|--force|-r)\b/, // rm -rf, del /f
+    /\bformat\b/, // format
+    /\bdd\b/, // dd
+    /\bmkfs\b/, // mkfs
+    /\b(fdisk|diskpart)\b/, // fdisk, diskpart
+  ];
+  return comandosPeligrosos.some((p) => p.test(comando));
+}
+
 function esProtegida(ctx: ContextoHerramientas, absoluta: string): boolean {
   const rel = rutaRelativa(ctx.raiz, absoluta);
-  return ctx.protegidos.some((p) => rel === p || rel.startsWith(p + '/'));
+  const esWindows = process.platform === 'win32';
+  const normalizar = esWindows ? (s: string) => s.toLowerCase() : (s: string) => s;
+  const relNorm = normalizar(rel);
+  return ctx.protegidos.some((p) => {
+    const pNorm = normalizar(p);
+    return relNorm === pNorm || relNorm.startsWith(pNorm + '/');
+  });
 }
 
 /**
@@ -73,13 +101,27 @@ export function aplicarEdicion(contenido: string, buscar: string, reemplazar: st
   const b = buscar.replace(/\r\n/g, '\n');
   const r = reemplazar.replace(/\r\n/g, '\n');
   let resultado: string | null = null;
-  const posicion = c.indexOf(b);
-  if (posicion >= 0) {
-    resultado = c.slice(0, posicion) + r + c.slice(posicion + b.length);
+  
+  // Buscar todas las coincidencias exactas
+  const coincidenciasExactas: number[] = [];
+  let posicion = c.indexOf(b);
+  while (posicion >= 0) {
+    coincidenciasExactas.push(posicion);
+    posicion = c.indexOf(b, posicion + 1);
+  }
+  
+  if (coincidenciasExactas.length > 1) {
+    // Múltiples coincidencias exactas: ambigüedad
+    return null;
+  } else if (coincidenciasExactas.length === 1) {
+    // Una sola coincidencia exacta
+    resultado = c.slice(0, coincidenciasExactas[0]) + r + c.slice(coincidenciasExactas[0] + b.length);
   } else {
+    // No hay coincidencia exacta, intentar coincidencia difusa
     const lineas = c.split('\n');
     const buscadas = b.split('\n');
-    for (let i = 0; i + buscadas.length <= lineas.length && resultado === null; i++) {
+    const coincidencias: number[] = [];
+    for (let i = 0; i + buscadas.length <= lineas.length; i++) {
       let coincide = true;
       for (let j = 0; j < buscadas.length; j++) {
         if (lineas[i + j]!.trim() !== buscadas[j]!.trim()) {
@@ -87,7 +129,12 @@ export function aplicarEdicion(contenido: string, buscar: string, reemplazar: st
           break;
         }
       }
-      if (coincide) resultado = [...lineas.slice(0, i), ...r.split('\n'), ...lineas.slice(i + buscadas.length)].join('\n');
+      if (coincide) coincidencias.push(i);
+    }
+    // Si hay múltiples coincidencias difusas, reportar ambigüedad en lugar de elegir la primera
+    if (coincidencias.length > 1) return null;
+    if (coincidencias.length === 1) {
+      resultado = [...lineas.slice(0, coincidencias[0]), ...r.split('\n'), ...lineas.slice(coincidencias[0] + buscadas.length)].join('\n');
     }
   }
   return resultado === null ? null : resultado.replace(/\n/g, finDeLinea);
@@ -131,6 +178,10 @@ export function arbolDeArchivos(raiz: string, inicio = '.', maxNivel = 4, maxEle
 }
 
 function buscarEnArchivos(raiz: string, inicio: string, patron: string): { texto: string; total: number } {
+  // Validar el patrón antes de compilarlo para evitar ReDoS
+  if (esRegexPeligroso(patron)) {
+    return { texto: 'Patrón de búsqueda demasiado complejo o peligroso. Usa una búsqueda más simple.', total: 0 };
+  }
   let expresion: RegExp;
   try {
     expresion = new RegExp(patron, 'i');
@@ -169,7 +220,7 @@ export function ejecutarComando(
     });
     let salida = '';
     const agregar = (datos: Buffer): void => {
-      if (salida.length < 4_000_000) salida += datos.toString('utf8');
+      if (salida.length < MAX_SALIDA_COMANDO) salida += datos.toString('utf8');
     };
     hijo.stdout?.on('data', agregar);
     hijo.stderr?.on('data', agregar);
@@ -279,6 +330,14 @@ export async function ejecutarAccion(accion: Accion, ctx: ContextoHerramientas, 
       }
       case 'ejecutar': {
         if (ctx.soloLectura) return { ok: false, salida: BLOQUEADO_EN_PLANEACION, resumen: 'Bloqueado en la planeación' };
+        // Bloquear comandos peligrosos incluso con autoAprobar activado
+        if (esComandoPeligroso(accion.comando)) {
+          return {
+            ok: false,
+            salida: 'Este comando parece peligroso y requiere aprobación explícita incluso con autoAprobar activado.',
+            resumen: 'Comando peligroso bloqueado',
+          };
+        }
         if (!ctx.autoAprobar) {
           const opciones = ctx.permitirSiempre ? ['Sí', 'Sí, y no volver a preguntar en esta sesión', 'No'] : ['Sí', 'No'];
           const eleccion = await ctx.ui.elegir('¿Ejecuto este comando?', opciones, accion.comando);

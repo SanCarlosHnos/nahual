@@ -14,6 +14,7 @@ import { crearInterfaz } from './interfaz/index';
 import type { Interfaz } from './interfaz/tipos';
 import { indicacionesDeMejora } from './indicaciones';
 import { leerMemoria } from './memoria';
+import { leerCapacidadesCreativas } from './capacidades';
 import { PROTEGIDOS, RAIZ } from './rutas';
 
 function verificar(dir: string, ui: Interfaz): { ok: boolean; informe: string } {
@@ -39,7 +40,7 @@ async function main(): Promise<number> {
 
   const cfg = cargarConfig();
   const ui = await crearInterfaz([]);
-  const contexto = { equipo: resumenEquipo(cargarEquipo()), memoria: leerMemoria() };
+  const contexto = { equipo: resumenEquipo(cargarEquipo()), memoria: leerMemoria(), creativas: leerCapacidadesCreativas() };
 
   const ctxHerramientas = {
     raiz: resolve(taller),
@@ -91,6 +92,8 @@ async function main(): Promise<number> {
     let revision = verificar(taller, ui);
     for (let intento = 1; !revision.ok && intento <= cfg.maxCorrecciones; intento++) {
       ui.emitir({ tipo: 'aviso', texto: `La verificación falló (corrección ${intento}/${cfg.maxCorrecciones}).` });
+      // Limpiar el contexto de correcciones anteriores para evitar que el historial acumulado degrade la calidad
+      agente.limpiarContextoCorrecciones();
       resultado = await agente.ejecutar(`La verificación automática FALLÓ. Corrige el problema y vuelve a usar terminar.\n\n${revision.informe}`);
       revision = verificar(taller, ui);
     }
@@ -100,7 +103,8 @@ async function main(): Promise<number> {
       return 1;
     }
     ui.emitir({ tipo: 'exito', texto: 'La copia del taller pasó la verificación.' });
-    if (resultado.resumen) ui.emitir({ tipo: 'asistente', texto: resultado.resumen });
+    // El resumen ya lo mostró el agente al terminar: repetirlo aquí llenaba la pantalla de duplicados.
+    if (!resultado.terminado && resultado.resumen) ui.emitir({ tipo: 'aviso', texto: resultado.resumen });
     return 0;
   } finally {
     ui.cerrar();

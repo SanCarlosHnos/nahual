@@ -123,7 +123,7 @@ function pintarEvento(e) {
     case 'progreso': {
       if (elementoPensando) {
         const t = elementoPensando.querySelector('.txt');
-        if (t) t.textContent = `Trabajando… ${e.tokens} palabras`;
+        if (t) t.textContent = `Trabajando… ${e.tokens} tokens`;
       }
       break;
     }
