@@ -83,3 +83,14 @@ jobs:
           dist/*.exe
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+    
+    - name: Sync version to master
+      shell: bash
+      run: |
+        git config user.name "github-actions[bot]"
+        git config user.email "github-actions[bot]@users.noreply.github.com"
+        git checkout master
+        npm version ${{ steps.get_version.outputs.VERSION }} --no-git-tag-version
+        git add package.json package-lock.json
+        git commit -m "chore: bump version to ${{ steps.get_version.outputs.VERSION }} [skip ci]"
+        git push origin master
